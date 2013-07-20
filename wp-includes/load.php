@@ -331,7 +331,7 @@ function require_wp_db() {
 	if ( isset( $wpdb ) )
 		return;
 
-	$wpdb = new wpdb( DB_USER, DB_PASSWORD, DB_NAME, DB_HOST );
+	$wpdb = new wpdb();
 }
 
 /**

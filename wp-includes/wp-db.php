@@ -440,52 +440,6 @@ class wpdb {
 	 * @var string
 	 */
 	var $collate;
-
-	/**
-	 * Database Username
-	 *
-	 * @since 2.9.0
-	 * @access protected
-	 * @var string
-	 */
-	protected $dbuser;
-
-	/**
-	 * Database Password
-	 *
-	 * @since 3.1.0
-	 * @access protected
-	 * @var string
-	 */
-	protected $dbpassword;
-
-	/**
-	 * Database Name
-	 *
-	 * @since 3.1.0
-	 * @access protected
-	 * @var string
-	 */
-	protected $dbname;
-
-	/**
-	 * Database Host
-	 *
-	 * @since 3.1.0
-	 * @access protected
-	 * @var string
-	 */
-	protected $dbhost;
-
-	/**
-	 * Database Handle
-	 *
-	 * @since 0.71
-	 * @access protected
-	 * @var string
-	 */
-	protected $dbh;
-
 	/**
 	 * A textual description of the last query/get_row/get_var call
 	 *
@@ -519,24 +473,14 @@ class wpdb {
 	 * @link http://core.trac.wordpress.org/ticket/3354
 	 * @since 2.0.8
 	 *
-	 * @param string $dbuser MySQL database user
-	 * @param string $dbpassword MySQL database password
-	 * @param string $dbname MySQL database name
-	 * @param string $dbhost MySQL database host
 	 */
-	function __construct( $dbuser, $dbpassword, $dbname, $dbhost ) {
+	function __construct() {
 		register_shutdown_function( array( $this, '__destruct' ) );
 
 		if ( WP_DEBUG && WP_DEBUG_DISPLAY )
 			$this->show_errors();
 
 		$this->init_charset();
-
-		$this->dbuser = $dbuser;
-		$this->dbpassword = $dbpassword;
-		$this->dbname = $dbname;
-		$this->dbhost = $dbhost;
-
 		$this->db_connect();
 	}
 
@@ -627,23 +571,22 @@ class wpdb {
 	 *
 	 * @since 3.1.0
 	 *
-	 * @param resource $dbh     The resource given by mysql_connect
 	 * @param string   $charset The character set (optional)
 	 * @param string   $collate The collation (optional)
 	 */
-	function set_charset( $dbh, $charset = null, $collate = null ) {
+	function set_charset( $charset = null, $collate = null ) {
 		if ( ! isset( $charset ) )
 			$charset = $this->charset;
 		if ( ! isset( $collate ) )
 			$collate = $this->collate;
 		if ( $this->has_cap( 'collation' ) && ! empty( $charset ) ) {
 			if ( function_exists( 'mysql_set_charset' ) && $this->has_cap( 'set_charset' ) ) {
-				mysql_set_charset( $charset, $dbh );
+				mysql_set_charset( $charset );
 			} else {
 				$query = $this->prepare( 'SET NAMES %s', $charset );
 				if ( ! empty( $collate ) )
 					$query .= $this->prepare( ' COLLATE %s', $collate );
-				mysql_query( $query, $dbh );
+				mysql_query( $query );
 			}
 		}
 	}
@@ -815,37 +758,6 @@ class wpdb {
 	}
 
 	/**
-	 * Selects a database using the current database connection.
-	 *
-	 * The database name will be changed based on the current database
-	 * connection. On failure, the execution will bail and display an DB error.
-	 *
-	 * @since 0.71
-	 *
-	 * @param string $db MySQL database name
-	 * @param resource $dbh Optional link identifier.
-	 * @return null Always null.
-	 */
-	function select( $db, $dbh = null ) {
-		if ( is_null($dbh) )
-			$dbh = $this->dbh;
-
-		if ( !@mysql_select_db( $db, $dbh ) ) {
-			$this->ready = false;
-			wp_load_translations_early();
-			$this->bail( sprintf( __( '<h1>Can&#8217;t select database</h1>
-<p>We were able to connect to the database server (which means your username and password is okay) but not able to select the <code>%1$s</code> database.</p>
-<ul>
-<li>Are you sure it exists?</li>
-<li>Does the user <code>%2$s</code> have permission to use the <code>%1$s</code> database?</li>
-<li>On some systems the name of your database is prefixed with your username, so it would be like <code>username_%1$s</code>. Could that be the problem?</li>
-</ul>
-<p>If you don\'t know how to set up a database you should <strong>contact your host</strong>. If all else fails you may find help at the <a href="http://wordpress.org/support/">WordPress Support Forums</a>.</p>' ), htmlspecialchars( $db, ENT_QUOTES ), htmlspecialchars( $this->dbuser, ENT_QUOTES ) ), 'db_select_fail' );
-			return;
-		}
-	}
-
-	/**
 	 * Do not use, deprecated.
 	 *
 	 * Use esc_sql() or wpdb::prepare() instead.
@@ -876,7 +788,7 @@ class wpdb {
 	 * @return string escaped
 	 */
 	function _real_escape( $string ) {
-		return mysql_real_escape_string( $string, $this->dbh );
+		return mysql_real_escape_string( $string );
 	}
 
 	/**
@@ -1014,7 +926,7 @@ class wpdb {
 		global $EZSQL_ERROR;
 
 		if ( !$str )
-			$str = mysql_error( $this->dbh );
+			$str = mysql_error();
 		$EZSQL_ERROR[] = array( 'query' => $this->last_query, 'error_str' => $str );
 
 		if ( $this->suppress_errors )
@@ -1127,39 +1039,9 @@ class wpdb {
 	 * @since 3.0.0
 	 */
 	function db_connect() {
-
 		$this->is_mysql = true;
-
-		$new_link = defined( 'MYSQL_NEW_LINK' ) ? MYSQL_NEW_LINK : true;
-		$client_flags = defined( 'MYSQL_CLIENT_FLAGS' ) ? MYSQL_CLIENT_FLAGS : 0;
-
-		if ( WP_DEBUG ) {
-			$this->dbh = mysql_connect( $this->dbhost, $this->dbuser, $this->dbpassword, $new_link, $client_flags );
-		} else {
-			$this->dbh = @mysql_connect( $this->dbhost, $this->dbuser, $this->dbpassword, $new_link, $client_flags );
-		}
-
-		if ( !$this->dbh ) {
-			wp_load_translations_early();
-			$this->bail( sprintf( __( "
-<h1>Error establishing a database connection</h1>
-<p>This either means that the username and password information in your <code>wp-config.php</code> file is incorrect or we can't contact the database server at <code>%s</code>. This could mean your host's database server is down.</p>
-<ul>
-	<li>Are you sure you have the correct username and password?</li>
-	<li>Are you sure that you have typed the correct hostname?</li>
-	<li>Are you sure that the database server is running?</li>
-</ul>
-<p>If you're unsure what these terms mean you should probably contact your host. If you still need help you can always visit the <a href='http://wordpress.org/support/'>WordPress Support Forums</a>.</p>
-" ), htmlspecialchars( $this->dbhost, ENT_QUOTES ) ), 'db_connect_fail' );
-
-			return;
-		}
-
-		$this->set_charset( $this->dbh );
-
+		$this->set_charset();
 		$this->ready = true;
-
-		$this->select( $this->dbname, $this->dbh );
 	}
 
 	/**
@@ -1191,14 +1073,14 @@ class wpdb {
 		if ( defined( 'SAVEQUERIES' ) && SAVEQUERIES )
 			$this->timer_start();
 
-		$this->result = @mysql_query( $query, $this->dbh );
+		$this->result = @mysql_query( $query );
 		$this->num_queries++;
 
 		if ( defined( 'SAVEQUERIES' ) && SAVEQUERIES )
 			$this->queries[] = array( $query, $this->timer_stop(), $this->get_caller() );
 
 		// If there is an error then take note of it..
-		if ( $this->last_error = mysql_error( $this->dbh ) ) {
+		if ( $this->last_error = mysql_error() ) {
 			$this->print_error();
 			return false;
 		}
@@ -1206,10 +1088,10 @@ class wpdb {
 		if ( preg_match( '/^\s*(create|alter|truncate|drop)\s/i', $query ) ) {
 			$return_val = $this->result;
 		} elseif ( preg_match( '/^\s*(insert|delete|update|replace)\s/i', $query ) ) {
-			$this->rows_affected = mysql_affected_rows( $this->dbh );
+			$this->rows_affected = mysql_affected_rows();
 			// Take note of the insert_id
 			if ( preg_match( '/^\s*(insert|replace)\s/i', $query ) ) {
-				$this->insert_id = mysql_insert_id($this->dbh);
+				$this->insert_id = mysql_insert_id();
 			}
 			// Return number of rows affected
 			$return_val = $this->rows_affected;
@@ -1732,6 +1614,6 @@ class wpdb {
 	 * @return false|string false on failure, version number on success
 	 */
 	function db_version() {
-		return preg_replace( '/[^0-9.].*/', '', mysql_get_server_info( $this->dbh ) );
+		return preg_replace( '/[^0-9.].*/', '', mysql_get_server_info() );
 	}
 }
