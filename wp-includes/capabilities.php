@@ -1278,6 +1278,10 @@ function map_meta_cap( $cap, $user_id ) {
  * @return bool
  */
 function current_user_can( $capability ) {
+    // ustc blog: disallow core updates because most files are symlinked
+    if ($capability == 'update-core')
+        return false;
+
 	$current_user = wp_get_current_user();
 
 	if ( empty( $current_user ) )
@@ -1299,6 +1303,10 @@ function current_user_can( $capability ) {
  * @return bool
  */
 function current_user_can_for_blog( $blog_id, $capability ) {
+    // ustc blog: disallow core updates because most files are symlinked
+    if ($capability == 'update-core')
+        return false;
+
 	if ( is_multisite() )
 		switch_to_blog( $blog_id );
 
