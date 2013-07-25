@@ -531,6 +531,8 @@ window.wp = window.wp || {};
 		className: 'revisions-controls',
 
 		initialize: function() {
+			_.bindAll( this, 'setWidth' );
+
 			// Add the button view
 			this.views.add( new revisions.view.Buttons({
 				model: this.model
@@ -573,34 +575,74 @@ window.wp = window.wp || {};
 			this.views.add( new revisions.view.Meta({
 				model: this.model
 			}) );
+		},
 
+		ready: function() {
+			this.top = this.$el.offset().top;
+			this.window = $(window);
+			this.window.on( 'scroll.wp.revisions', {controls: this}, function(e) {
+				var controls = e.data.controls;
+				var container = controls.$el.parent();
+				var scrolled = controls.window.scrollTop();
+				var frame = controls.views.parent;
+
+				if ( scrolled >= controls.top ) {
+					if ( ! frame.$el.hasClass('pinned') ) {
+						controls.setWidth();
+						container.css('height', container.height() + 'px' );
+						controls.window.on('resize.wp.revisions.pinning click.wp.revisions.pinning', {controls: controls}, function(e) {
+							e.data.controls.setWidth();
+						});
+					}
+					frame.$el.addClass('pinned');
+				} else if ( frame.$el.hasClass('pinned') ) {
+					controls.window.off('.wp.revisions.pinning');
+					controls.$el.css('width', 'auto');
+					frame.$el.removeClass('pinned');
+					container.css('height', 'auto');
+					controls.top = controls.$el.offset().top;
+				} else {
+					controls.top = controls.$el.offset().top;
+				}
+			});
+		},
+
+		setWidth: function() {
+			this.$el.css('width', this.$el.parent().width() + 'px');
 		}
 	});
 
 	// The tickmarks view
 	revisions.view.Tickmarks = wp.Backbone.View.extend({
 		className: 'revisions-tickmarks',
+		direction: isRtl ? 'right' : 'left',
 
 		initialize: function() {
 			this.listenTo( this.model, 'change:revision', this.reportTickPosition );
 		},
 
 		reportTickPosition: function( model, revision ) {
-			var elWidth, offset, tick, index = this.model.revisions.indexOf( revision );
+			var offset, thisOffset, parentOffset, tick, index = this.model.revisions.indexOf( revision );
+			thisOffset = this.$el.allOffsets();
+			parentOffset = this.$el.parent().allOffsets();
 			if ( index === this.model.revisions.length - 1 ) {
 				// Last one
-				tick = this.$('div:nth-of-type(' + index + ')');
-				offset = tick.allPositions();
-				elWidth = tick.outerWidth();
-				// adjust
-				_.extend( offset, {
-					right: offset.right + elWidth + 1,
-					left: offset.left + elWidth + 1
-				});
+				offset = {
+					rightPlusWidth: thisOffset.left - parentOffset.left + 1,
+					leftPlusWidth: thisOffset.right - parentOffset.right + 1
+				};
 			} else {
 				// Normal tick
 				tick = this.$('div:nth-of-type(' + (index + 1) + ')');
 				offset = tick.allPositions();
+				_.extend( offset, {
+					left: offset.left + thisOffset.left - parentOffset.left,
+					right: offset.right + thisOffset.right - parentOffset.right
+				});
+				_.extend( offset, {
+					leftPlusWidth: offset.left + tick.outerWidth(),
+					rightPlusWidth: offset.right + tick.outerWidth()
+				});
 			}
 			this.model.set({ offset: offset });
 		},
@@ -609,10 +651,11 @@ window.wp = window.wp || {};
 			var tickCount, tickWidth;
 			tickCount = this.model.revisions.length - 1;
 			tickWidth = 1 / tickCount;
+			this.$el.css('width', ( this.model.revisions.length * 50 ) + 'px');
 
-			_(tickCount).times( function(){ this.$el.append( '<div></div>' ); }, this );
-
-			this.$('div').css( 'width', ( 100 * tickWidth ) + '%' );
+			_(tickCount).times( function( index ){
+				this.$el.append( '<div style="' + this.direction + ': ' + ( 100 * tickWidth * index ) + '%"></div>' );
+			}, this );
 		}
 	});
 
@@ -626,20 +669,15 @@ window.wp = window.wp || {};
 		},
 
 		initialize: function() {
-			this.listenTo( this.model, 'update:revisions', this.ready );
+			this.listenTo( this.model, 'update:revisions', this.render );
 		},
 
 		prepare: function() {
 			return this.model.toJSON();
 		},
 
-		ready: function() {
-			this.$('.restore-revision').prop( 'disabled', this.model.get('to').get('current') );
-		},
-
 		restoreRevision: function() {
-			var restoreUrl = this.model.get('to').attributes.restoreUrl.replace(/&amp;/g, '&');
-			document.location = restoreUrl;
+			document.location = this.model.get('to').attributes.restoreUrl;
 		}
 	});
 
@@ -677,7 +715,6 @@ window.wp = window.wp || {};
 	revisions.view.Tooltip = wp.Backbone.View.extend({
 		className: 'revisions-tooltip',
 		template: wp.template('revisions-tooltip'),
-		direction: isRtl ? 'right' : 'left',
 
 		initialize: function( options ) {
 			this.listenTo( this.model, 'change:offset', this.render );
@@ -690,10 +727,20 @@ window.wp = window.wp || {};
 		},
 
 		render: function() {
-			var css = {};
+			var direction, directionVal, flipped, css = {}, position = this.model.revisions.indexOf( this.model.get('revision') ) + 1;
+			flipped = ( position / this.model.revisions.length ) > 0.5;
+			if ( isRtl ) {
+				direction = flipped ? 'left' : 'right';
+				directionVal = flipped ? 'leftPlusWidth' : direction;
+			} else {
+				direction = flipped ? 'right' : 'left';
+				directionVal = flipped ? 'rightPlusWidth' : direction;
+			}
+			otherDirection = 'right' === direction ? 'left': 'right';
 			wp.Backbone.View.prototype.render.apply( this, arguments );
-			css[this.direction] = this.model.get('offset')[this.direction] + 'px';
-			this.$el.css( css );
+			css[direction] = this.model.get('offset')[directionVal] + 'px';
+			css[otherDirection] = '';
+			this.$el.toggleClass( 'flipped', flipped ).css( css );
 		},
 
 		visible: function() {
@@ -716,8 +763,8 @@ window.wp = window.wp || {};
 		template: wp.template('revisions-buttons'),
 
 		events: {
-			'click #next': 'nextRevision',
-			'click #previous': 'previousRevision'
+			'click .revisions-next .button': 'nextRevision',
+			'click .revisions-previous .button': 'previousRevision'
 		},
 
 		initialize: function() {
@@ -786,6 +833,7 @@ window.wp = window.wp || {};
 		},
 
 		ready: function() {
+			this.$el.css('width', ( this.model.revisions.length * 50 ) + 'px');
 			this.$el.slider( _.extend( this.model.toJSON(), {
 				start: this.start,
 				slide: this.slide,
