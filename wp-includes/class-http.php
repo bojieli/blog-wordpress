@@ -710,12 +710,13 @@ class WP_Http_Fsockopen {
 
 		$strHeaders = strtoupper($r['method']) . ' ' . $requestPath . ' HTTP/' . $r['httpversion'] . "\r\n";
 
-		if ( !isset($r['headers']['Host']) ) {
-			if ( $proxy->is_enabled() && $proxy->send_through_proxy( $url ) )
-				$strHeaders .= 'Host: ' . $arrURL['host'] . ':' . $arrURL['port'] . "\r\n";
-			else
-				$strHeaders .= 'Host: ' . $arrURL['host'] . "\r\n";
+		if ( $proxy->is_enabled() && $proxy->send_through_proxy( $url ) ) {
+			$strHeaders .= 'Host: ' . $arrURL['host'] . ':' . $arrURL['port'] . "\r\n";
+			if ( isset($r['headers']['Host']) )
+				unset($r['headers']['Host']);
 		}
+		else if ( !isset($r['headers']['Host']) )
+			$strHeaders .= 'Host: ' . $arrURL['host'] . "\r\n";
 
 		if ( isset($r['user-agent']) )
 			$strHeaders .= 'User-agent: ' . $r['user-agent'] . "\r\n";
