@@ -1913,7 +1913,7 @@ function get_home_url( $blog_id = null, $path = '', $scheme = null ) {
 	}
 
 	if ( ! in_array( $scheme, array( 'http', 'https', 'relative' ) ) ) {
-		if ( is_ssl() && ! is_admin() )
+		if ( is_ssl() && ! is_admin() && 'wp-login.php' !== $GLOBALS['pagenow'] )
 			$scheme = 'https';
 		else
 			$scheme = parse_url( $url, PHP_URL_SCHEME );
@@ -2020,10 +2020,11 @@ function get_admin_url( $blog_id = null, $path = '', $scheme = 'admin' ) {
  * @since 2.6.0
  *
  * @param string $path Optional. Path relative to the includes url.
+ * @param string $scheme Optional. Scheme to give the includes url context.
  * @return string Includes url link with optional path appended.
 */
-function includes_url($path = '') {
-	$url = site_url() . '/' . WPINC . '/';
+function includes_url( $path = '', $scheme = null ) {
+	$url = site_url( '/' . WPINC . '/', $scheme );
 
 	if ( $path && is_string( $path ) )
 		$url .= ltrim($path, '/');

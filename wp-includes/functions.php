@@ -422,7 +422,7 @@ function do_enclose( $content, $post_ID ) {
 	$punc = '.:?\-';
 	$any = $ltrs . $gunk . $punc;
 
-	preg_match_all( "{\b http : [$any] +? (?= [$punc] * [^$any] | $)}x", $content, $post_links_temp );
+	preg_match_all( "{\b https? : [$any] +? (?= [$punc] * [^$any] | $)}x", $content, $post_links_temp );
 
 	foreach ( $pung as $link_test ) {
 		if ( !in_array( $link_test, $post_links_temp[0] ) ) { // link no longer in post
@@ -496,14 +496,13 @@ function wp_get_http( $url, $file_path = false, $red = 1 ) {
 
 	$options = array();
 	$options['redirection'] = 5;
-	$options['reject_unsafe_urls'] = true;
 
 	if ( false == $file_path )
 		$options['method'] = 'HEAD';
 	else
 		$options['method'] = 'GET';
 
-	$response = wp_remote_request($url, $options);
+	$response = wp_safe_remote_request( $url, $options );
 
 	if ( is_wp_error( $response ) )
 		return false;
@@ -544,7 +543,7 @@ function wp_get_http_headers( $url, $deprecated = false ) {
 	if ( !empty( $deprecated ) )
 		_deprecated_argument( __FUNCTION__, '2.7' );
 
-	$response = wp_remote_head( $url, array( 'reject_unsafe_urls' => true ) );
+	$response = wp_safe_remote_head( $url );
 
 	if ( is_wp_error( $response ) )
 		return false;
@@ -759,9 +758,8 @@ function wp_remote_fopen( $uri ) {
 
 	$options = array();
 	$options['timeout'] = 10;
-	$options['reject_unsafe_urls'] = true;
 
-	$response = wp_remote_get( $uri, $options );
+	$response = wp_safe_remote_get( $uri, $options );
 
 	if ( is_wp_error( $response ) )
 		return false;

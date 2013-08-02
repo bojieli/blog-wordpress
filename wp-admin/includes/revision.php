@@ -9,6 +9,8 @@
 /**
  * Get the revision UI diff.
  *
+ * @since 3.6.0
+ *
  * @param object $post The post object.
  * @param int $compare_from The revision id to compare from.
  * @param int $compare_to The revision id to come to.
@@ -53,8 +55,8 @@ function wp_get_revision_ui_diff( $post, $compare_from, $compare_to ) {
 	$return = array();
 
 	foreach ( _wp_post_revision_fields() as $field => $name ) {
-		$content_from = $compare_from ? apply_filters( "_wp_post_revision_field_$field", $compare_from->$field, $field, $compare_from, 'left' ) : '';
-		$content_to = apply_filters( "_wp_post_revision_field_$field", $compare_to->$field, $field, $compare_to, 'right' );
+		$content_from = $compare_from ? apply_filters( "_wp_post_revision_field_$field", $compare_from->$field, $field, $compare_from, 'from' ) : '';
+		$content_to = apply_filters( "_wp_post_revision_field_$field", $compare_to->$field, $field, $compare_to, 'to' );
 
 		$diff = wp_text_diff( $content_from, $content_to, array( 'show_split_view' => true ) );
 
@@ -80,6 +82,8 @@ function wp_get_revision_ui_diff( $post, $compare_from, $compare_to ) {
 
 /**
  * Prepare revisions for JavaScript.
+ *
+ * @since 3.6.0
  *
  * @param object $post The post object.
  * @param int $selected_revision_id The selected revision id.
@@ -175,8 +179,13 @@ function wp_prepare_revisions_for_js( $post, $selected_revision_id, $from = null
 	// Now, grab the initial diff
 	$compare_two_mode = is_numeric( $from );
 	if ( ! $compare_two_mode ) {
-		$from = array_keys( array_slice( $revisions, array_search( $selected_revision_id, array_keys( $revisions ) ) - 1, 1, true ) );
-		$from = $from[0];
+		$found = array_search( $selected_revision_id, array_keys( $revisions ) );
+		if ( $found ) {
+			$from = array_keys( array_slice( $revisions, $found - 1, 1, true ) );
+			$from = reset( $from );
+		} else {
+			$from = 0;
+		}
 	}
 
 	$from = absint( $from );

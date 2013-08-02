@@ -1,6 +1,10 @@
 /**
  * Heartbeat API
  *
+ * Note: this API is "experimental" meaning it will likely change a lot
+ * in the next few releases based on feedback from 3.6.0. If you intend
+ * to use it, please follow the development closely.
+ *
  * Heartbeat is a simple server polling API that sends XHR requests to
  * the server every 15 seconds and triggers events (or callbacks) upon
  * receiving data. Currently these 'ticks' handle transports for post locking,
@@ -47,7 +51,6 @@ window.wp = window.wp || {};
 		 * Returns a boolean that's indicative of whether or not there is a connection error
 		 *
 		 * @returns boolean
-		 * @private
 		 */
 		this.hasConnectionError = function() {
 			return hasConnectionError;
@@ -222,7 +225,7 @@ window.wp = window.wp || {};
 				return;
 
 			if ( ! hasFocus ) {
-				t = 120000; // 2 min
+				t = 100000; // 100 sec. Post locks expire after 120 sec.
 			} else if ( countdown > 0 && tempInterval ) {
 				t = tempInterval;
 				countdown--;

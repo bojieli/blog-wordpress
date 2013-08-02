@@ -860,7 +860,7 @@ function wp_audio_shortcode( $attr ) {
 		'src'      => '',
 		'loop'     => '',
 		'autoplay' => '',
-		'preload' => 'none'
+		'preload'  => 'none'
 	);
 	foreach ( $default_types as $type )
 		$defaults_atts[$type] = '';
@@ -870,15 +870,15 @@ function wp_audio_shortcode( $attr ) {
 
 	$primary = false;
 	if ( ! empty( $src ) ) {
-		$type = wp_check_filetype( $src );
+		$type = wp_check_filetype( $src, wp_get_mime_types() );
 		if ( ! in_array( $type['ext'], $default_types ) )
-			return sprintf( '<a class="wp-post-format-link-audio" href="%s">%s</a>', esc_url( $src ), esc_html( $src ) );
+			return sprintf( '<a class="wp-embedded-audio" href="%s">%s</a>', esc_url( $src ), esc_html( $src ) );
 		$primary = true;
 		array_unshift( $default_types, 'src' );
 	} else {
 		foreach ( $default_types as $ext ) {
 			if ( ! empty( $$ext ) ) {
-				$type = wp_check_filetype( $$ext );
+				$type = wp_check_filetype( $$ext, wp_get_mime_types() );
 				if ( $type['ext'] === $ext )
 					$primary = true;
 			}
@@ -910,6 +910,7 @@ function wp_audio_shortcode( $attr ) {
 		'loop'     => $loop,
 		'autoplay' => $autoplay,
 		'preload'  => $preload,
+		'style'    => 'width: 100%',
 	);
 
 	// These ones should just be omitted altogether if they are blank
@@ -923,7 +924,10 @@ function wp_audio_shortcode( $attr ) {
 		$attr_strings[] = $k . '="' . esc_attr( $v ) . '"';
 	}
 
-	$html = sprintf( '<audio %s controls="controls">', join( ' ', $attr_strings ) );
+	$html = '';
+	if ( 'mediaelement' === $library && 1 === $instances )
+		$html .= "<!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->\n";
+	$html .= sprintf( '<audio %s controls="controls">', join( ' ', $attr_strings ) );
 
 	$fileurl = '';
 	$source = '<source type="%s" src="%s" />';
@@ -931,7 +935,7 @@ function wp_audio_shortcode( $attr ) {
 		if ( ! empty( $$fallback ) ) {
 			if ( empty( $fileurl ) )
 				$fileurl = $$fallback;
-			$type = wp_check_filetype( $$fallback );
+			$type = wp_check_filetype( $$fallback, wp_get_mime_types() );
 			$html .= sprintf( $source, $type['type'], esc_url( $$fallback ) );
 		}
 	}
@@ -940,7 +944,7 @@ function wp_audio_shortcode( $attr ) {
 		$html .= wp_mediaelement_fallback( $fileurl );
 	$html .= '</audio>';
 
-	return apply_filters( 'wp_audio_shortcode', $html, $atts, $audio, $post_id );
+	return apply_filters( 'wp_audio_shortcode', $html, $atts, $audio, $post_id, $library );
 }
 add_shortcode( 'audio', apply_filters( 'wp_audio_shortcode_handler', 'wp_audio_shortcode' ) );
 
@@ -1005,15 +1009,15 @@ function wp_video_shortcode( $attr ) {
 
 	$primary = false;
 	if ( ! empty( $src ) ) {
-		$type = wp_check_filetype( $src );
+		$type = wp_check_filetype( $src, wp_get_mime_types() );
 		if ( ! in_array( $type['ext'], $default_types ) )
-			return sprintf( '<a class="wp-post-format-link-video" href="%s">%s</a>', esc_url( $src ), esc_html( $src ) );
+			return sprintf( '<a class="wp-embedded-video" href="%s">%s</a>', esc_url( $src ), esc_html( $src ) );
 		$primary = true;
 		array_unshift( $default_types, 'src' );
 	} else {
 		foreach ( $default_types as $ext ) {
 			if ( ! empty( $$ext ) ) {
-				$type = wp_check_filetype( $$ext );
+				$type = wp_check_filetype( $$ext, wp_get_mime_types() );
 				if ( $type['ext'] === $ext )
 					$primary = true;
 			}
@@ -1061,7 +1065,10 @@ function wp_video_shortcode( $attr ) {
 		$attr_strings[] = $k . '="' . esc_attr( $v ) . '"';
 	}
 
-	$html = sprintf( '<video %s controls="controls">', join( ' ', $attr_strings ) );
+	$html = '';
+	if ( 'mediaelement' === $library && 1 === $instances )
+		$html .= "<!--[if lt IE 9]><script>document.createElement('video');</script><![endif]-->\n";
+	$html .= sprintf( '<video %s controls="controls">', join( ' ', $attr_strings ) );
 
 	$fileurl = '';
 	$source = '<source type="%s" src="%s" />';
@@ -1069,7 +1076,7 @@ function wp_video_shortcode( $attr ) {
 		if ( ! empty( $$fallback ) ) {
 			if ( empty( $fileurl ) )
 				$fileurl = $$fallback;
-			$type = wp_check_filetype( $$fallback );
+			$type = wp_check_filetype( $$fallback, wp_get_mime_types() );
 			// m4v sometimes shows up as video/mpeg which collides with mp4
 			if ( 'm4v' === $type['ext'] )
 				$type['type'] = 'video/m4v';
@@ -1081,7 +1088,7 @@ function wp_video_shortcode( $attr ) {
 	$html .= '</video>';
 
 	$html = sprintf( '<div style="width: %dpx; max-width: 100%%;">%s</div>', $width, $html );
-	return apply_filters( 'wp_video_shortcode', $html, $atts, $video, $post_id );
+	return apply_filters( 'wp_video_shortcode', $html, $atts, $video, $post_id, $library );
 }
 add_shortcode( 'video', apply_filters( 'wp_video_shortcode_handler', 'wp_video_shortcode' ) );
 
@@ -2017,6 +2024,6 @@ function get_post_galleries_images( $post = 0 ) {
  * @return array A list of a gallery's image srcs in order
  */
 function get_post_gallery_images( $post = 0 ) {
-	$galleries = get_post_gallery( $post, false );
+	$gallery = get_post_gallery( $post, false );
 	return empty( $gallery['src'] ) ? array() : $gallery['src'];
 }

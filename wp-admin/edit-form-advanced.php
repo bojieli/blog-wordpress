@@ -122,7 +122,7 @@ if ( post_type_supports($post_type, 'revisions') && 'auto-draft' != $post->post_
 	if ( count( $revisions ) > 1 ) {
 		reset( $revisions ); // Reset pointer for key()
 		$publish_callback_args = array( 'revisions_count' => count( $revisions ), 'revision_id' => key( $revisions ) );
-		// add_meta_box('revisionsdiv', __('Revisions'), 'post_revisions_meta_box', null, 'normal', 'core');
+		add_meta_box('revisionsdiv', __('Revisions'), 'post_revisions_meta_box', null, 'normal', 'core');
 	}
 }
 
@@ -352,6 +352,8 @@ wp_nonce_field( 'meta-box-order', 'meta-box-order-nonce', false );
 wp_nonce_field( 'closedpostboxes', 'closedpostboxesnonce', false );
 ?>
 
+<?php do_action( 'edit_form_top', $post ); ?>
+
 <div id="poststuff">
 <div id="post-body" class="metabox-holder columns-<?php echo 1 == get_current_screen()->get_columns() ? '1' : '2'; ?>">
 <div id="post-body-content">
@@ -407,8 +409,7 @@ if ( post_type_supports($post_type, 'editor') ) {
 <?php
 	if ( 'auto-draft' != $post->post_status ) {
 		echo '<span id="last-edit">';
-		if ( $last_id = get_post_meta($post_ID, '_edit_last', true) ) {
-			$last_user = get_userdata($last_id);
+		if ( $last_user = get_userdata( get_post_meta( $post_ID, '_edit_last', true ) ) ) {
 			printf(__('Last edited by %1$s on %2$s at %3$s'), esc_html( $last_user->display_name ), mysql2date(get_option('date_format'), $post->post_modified), mysql2date(get_option('time_format'), $post->post_modified));
 		} else {
 			printf(__('Last edited on %1$s at %2$s'), mysql2date(get_option('date_format'), $post->post_modified), mysql2date(get_option('time_format'), $post->post_modified));

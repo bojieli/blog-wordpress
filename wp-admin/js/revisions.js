@@ -155,8 +155,6 @@ window.wp = window.wp || {};
 			this.listenTo( this.slider, 'hovered:revision', this.updateRevision );
 			this.listenTo( this.slider, 'change:hovering', this.setHovering );
 			this.listenTo( this.slider, 'change:scrubbing', this.setScrubbing );
-
-			this.set({ revision: this.frame.diff() });
 		},
 
 
@@ -571,8 +569,8 @@ window.wp = window.wp || {};
 				model: slider
 			}) );
 
-			// Add the Meta view
-			this.views.add( new revisions.view.Meta({
+			// Add the Metabox view
+			this.views.add( new revisions.view.Metabox({
 				model: this.model
 			}) );
 		},
@@ -659,9 +657,26 @@ window.wp = window.wp || {};
 		}
 	});
 
-	// The meta view
-	revisions.view.Meta = wp.Backbone.View.extend({
+	// The metabox view
+	revisions.view.Metabox = wp.Backbone.View.extend({
 		className: 'revisions-meta',
+
+		initialize: function() {
+			// Add the 'from' view
+			this.views.add( new revisions.view.MetaFrom({
+				model: this.model,
+				className: 'diff-meta diff-meta-from'
+			}) );
+
+			// Add the 'to' view
+			this.views.add( new revisions.view.MetaTo({
+				model: this.model
+			}) );
+		}
+	});
+
+	// The revision meta view (to be extended)
+	revisions.view.Meta = wp.Backbone.View.extend({
 		template: wp.template('revisions-meta'),
 
 		events: {
@@ -673,12 +688,26 @@ window.wp = window.wp || {};
 		},
 
 		prepare: function() {
-			return this.model.toJSON();
+			return _.extend( this.model.toJSON()[this.type] || {}, {
+				type: this.type
+			});
 		},
 
 		restoreRevision: function() {
 			document.location = this.model.get('to').attributes.restoreUrl;
 		}
+	});
+
+	// The revision meta 'from' view
+	revisions.view.MetaFrom = revisions.view.Meta.extend({
+		className: 'diff-meta diff-meta-from',
+		type: 'from'
+	});
+
+	// The revision meta 'to' view
+	revisions.view.MetaTo = revisions.view.Meta.extend({
+		className: 'diff-meta diff-meta-to',
+		type: 'to'
 	});
 
 	// The checkbox view.
@@ -714,7 +743,7 @@ window.wp = window.wp || {};
 	// Encapsulates the tooltip.
 	revisions.view.Tooltip = wp.Backbone.View.extend({
 		className: 'revisions-tooltip',
-		template: wp.template('revisions-tooltip'),
+		template: wp.template('revisions-meta'),
 
 		initialize: function( options ) {
 			this.listenTo( this.model, 'change:offset', this.render );
@@ -723,7 +752,12 @@ window.wp = window.wp || {};
 		},
 
 		prepare: function() {
-			return this.model.get('revision').toJSON();
+			if ( _.isNull( this.model.get('revision') ) )
+				return;
+			else
+				return _.extend( { type: 'tooltip' }, {
+					attributes: this.model.get('revision').toJSON()
+				});
 		},
 
 		render: function() {

@@ -207,11 +207,18 @@ define('EP_AUTHORS', 2048);
 define('EP_PAGES', 4096);
 
 /**
+ * Endpoint Mask for all archive views.
+ *
+ * @since 3.7.0
+ */
+define( 'EP_ALL_ARCHIVES', EP_DATE | EP_YEAR | EP_MONTH | EP_DAY | EP_CATEGORIES | EP_TAGS | EP_AUTHORS );
+
+/**
  * Endpoint Mask for everything.
  *
  * @since 2.1.0
  */
-define('EP_ALL', 8191);
+define( 'EP_ALL', EP_PERMALINK | EP_ATTACHMENT | EP_ROOT | EP_COMMENTS | EP_SEARCH | EP_PAGES | EP_ALL_ARCHIVES );
 
 /**
  * Add an endpoint, like /trackback/.
@@ -1435,8 +1442,8 @@ class WP_Rewrite {
 					if ( !empty($endpoints) ) {
 						foreach ( (array) $ep_query_append as $regex => $ep ) {
 							if ( $ep[0] & EP_ATTACHMENT ) {
-								$rewrite[$sub1 . $regex] = $subquery . $ep[1] . $this->preg_index(2);
-								$rewrite[$sub2 . $regex] = $subquery . $ep[1] . $this->preg_index(2);
+								$rewrite[$sub1 . $regex] = $subquery . $ep[1] . $this->preg_index(3);
+								$rewrite[$sub2 . $regex] = $subquery . $ep[1] . $this->preg_index(3);
 							}
 						}
 					}
