@@ -30,12 +30,13 @@ error_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_W
 
 $table_prefix  = 'wp_';
 
-define('WPLANG', 'zh_CN');
-
-define('WP_DEBUG', false);
-
 /** The config file resides in ABSPATH */
 require_once( ABSPATH . 'wp-config.php' );
+
+if (!defined('WPLANG'))
+    define('WPLANG', 'zh_CN');
+if (!defined('WP_DEBUG'))
+    define('WP_DEBUG', false);
 
 /** Set up and fix common variables */
 require_once(ABSPATH . 'wp-settings.php');
