@@ -685,7 +685,7 @@ function update_core($from, $to) {
 
 	// Create maintenance file to signal that we are upgrading
 	$maintenance_string = '<?php $upgrading = ' . time() . '; ?>';
-	$maintenance_file = $to . '.maintenance';
+	$maintenance_file = $to . '.maintenance.php';
 	$wp_filesystem->delete($maintenance_file);
 	$wp_filesystem->put_contents($maintenance_file, $maintenance_string, FS_CHMOD_FILE);
 

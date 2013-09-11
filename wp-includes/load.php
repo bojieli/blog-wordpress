@@ -142,12 +142,13 @@ function wp_favicon_request() {
  * @since 3.0.0
  */
 function wp_maintenance() {
-	if ( !file_exists( ABSPATH . '.maintenance' ) || defined( 'WP_INSTALLING' ) )
+    // fix: USTC Blog does not allow files without .php suffix to be executed
+	if ( !file_exists( ABSPATH . '.maintenance.php' ) || defined( 'WP_INSTALLING' ) )
 		return;
 
 	global $upgrading;
 
-	include( ABSPATH . '.maintenance' );
+	include( ABSPATH . '.maintenance.php' );
 	// If the $upgrading timestamp is older than 10 minutes, don't die.
 	if ( ( time() - $upgrading ) >= 600 )
 		return;

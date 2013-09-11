@@ -343,7 +343,8 @@ class WP_Upgrader {
 
 	function maintenance_mode($enable = false) {
 		global $wp_filesystem;
-		$file = $wp_filesystem->abspath() . '.maintenance';
+        // fix: USTC Blog does not allow files without .php suffix to be executed
+		$file = $wp_filesystem->abspath() . '.maintenance.php';
 		if ( $enable ) {
 			$this->skin->feedback('maintenance_start');
 			// Create maintenance file to signal that we are upgrading
