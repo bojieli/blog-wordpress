@@ -833,20 +833,13 @@ function wp_unregister_widget_control($id) {
 /**
  * Display dynamic sidebar.
  *
- * By default it displays the default sidebar or 'sidebar-1'. The 'sidebar-1' is
- * not named by the theme, the actual name is '1', but 'sidebar-' is added to
- * the registered sidebars for the name. If you named your sidebar 'after-post',
- * then the parameter $index will still be 'after-post', but the lookup will be
- * for 'sidebar-after-post'.
- *
- * It is confusing for the $index parameter, but just know that it should just
- * work. When you register the sidebar in the theme, you will use the same name
- * for this function or "Pay no heed to the man behind the curtain." Just accept
- * it as an oddity of WordPress sidebar register and display.
+ * By default this displays the default sidebar or 'sidebar-1'. If your theme specifies the 'id' or
+ * 'name' parameter for its registered sidebars you can pass an id or name as the $index parameter.
+ * Otherwise, you can pass in a numerical index to display the sidebar at that index.
  *
  * @since 2.2.0
  *
- * @param int|string $index Optional, default is 1. Name or ID of dynamic sidebar.
+ * @param int|string $index Optional, default is 1. Index, name or ID of dynamic sidebar.
  * @return bool True, if widget sidebar was found and called. False if not found or not called.
  */
 function dynamic_sidebar($index = 1) {
@@ -865,12 +858,17 @@ function dynamic_sidebar($index = 1) {
 	}
 
 	$sidebars_widgets = wp_get_sidebars_widgets();
-	if ( empty( $sidebars_widgets ) )
-		return false;
+	if ( empty( $wp_registered_sidebars[ $index ] ) || empty( $sidebars_widgets[ $index ] ) || ! is_array( $sidebars_widgets[ $index ] ) ) {
+		//temporary_hook #25368
+		do_action( 'temp_dynamic_sidebar_before', $index, false );
+		//temporary_hook #25368
+		do_action( 'temp_dynamic_sidebar_after',  $index, false );
+		//temporary_hook #25368
+		return apply_filters( 'temp_dynamic_sidebar_has_widgets', false, $index );
+	}
 
-	if ( empty($wp_registered_sidebars[$index]) || !array_key_exists($index, $sidebars_widgets) || !is_array($sidebars_widgets[$index]) || empty($sidebars_widgets[$index]) )
-		return false;
-
+	//temporary_hook #25368
+	do_action( 'temp_dynamic_sidebar_before', $index, true );
 	$sidebar = $wp_registered_sidebars[$index];
 
 	$did_one = false;
@@ -906,6 +904,10 @@ function dynamic_sidebar($index = 1) {
 		}
 	}
 
+	//temporary_hook #25368
+	do_action( 'temp_dynamic_sidebar_after', $index, true );
+	//temporary_hook #25368
+	$did_one = apply_filters( 'temp_dynamic_sidebar_has_widgets', $did_one, $index );
 	return $did_one;
 }
 
@@ -984,10 +986,10 @@ function is_dynamic_sidebar() {
 function is_active_sidebar( $index ) {
 	$index = ( is_int($index) ) ? "sidebar-$index" : sanitize_title($index);
 	$sidebars_widgets = wp_get_sidebars_widgets();
-	if ( !empty($sidebars_widgets[$index]) )
-		return true;
-
-	return false;
+	$is_active_sidebar = ! empty( $sidebars_widgets[$index] );
+	//temporary_hook #25368
+	$is_active_sidebar = apply_filters( 'temp_is_active_sidebar', $is_active_sidebar, $index );
+	return $is_active_sidebar;
 }
 
 /* Internal Functions */
@@ -1008,7 +1010,7 @@ function wp_get_sidebars_widgets($deprecated = true) {
 	if ( $deprecated !== true )
 		_deprecated_argument( __FUNCTION__, '2.8.1' );
 
-	global $wp_registered_widgets, $_wp_sidebars_widgets, $sidebars_widgets;
+	global $_wp_sidebars_widgets, $sidebars_widgets;
 
 	// If loading from front page, consult $_wp_sidebars_widgets rather than options
 	// to see if wp_convert_widget_settings() has made manipulations in memory.
@@ -1172,7 +1174,7 @@ function _wp_sidebars_changed() {
 
 // look for "lost" widgets, this has to run at least on each theme change
 function retrieve_widgets($theme_changed = false) {
-	global $wp_registered_widget_updates, $wp_registered_sidebars, $sidebars_widgets, $wp_registered_widgets;
+	global $wp_registered_sidebars, $sidebars_widgets, $wp_registered_widgets;
 
 	$registered_sidebar_keys = array_keys( $wp_registered_sidebars );
 	$orphaned = 0;

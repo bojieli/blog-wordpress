@@ -266,23 +266,64 @@ function get_theme_feature_list( $api = true ) {
  *
  * @since 2.8.0
  *
- * @param string $action
- * @param array|object $args Optional. Arguments to serialize for the Theme Info API.
+ * @param string       $action The requested action. Likely values are 'theme_information',
+ *                             'feature_list', or 'query_themes'.
+ * @param array|object $args   Optional. Arguments to serialize for the Theme Info API.
  * @return mixed
  */
-function themes_api($action, $args = null) {
+function themes_api( $action, $args = null ) {
 
 	if ( is_array($args) )
 		$args = (object)$args;
 
 	if ( !isset($args->per_page) )
 		$args->per_page = 24;
-
-	$args = apply_filters('themes_api_args', $args, $action); //NOTE: Ensure that an object is returned via this filter.
-	$res = apply_filters('themes_api', false, $action, $args); //NOTE: Allows a theme to completely override the builtin WordPress.org API.
+	/**
+	 * Filter arguments used to query for installer pages from the WordPress.org Themes API.
+	 *
+	 * Important: An object MUST be returned to this filter.
+	 * 
+	 * @since 2.8.0
+	 * 
+	 * @param object $args   Arguments used to query for installer pages from the WordPress.org Themes API.
+	 * @param string $action Requested action. Likely values are 'theme_information',
+	 *                       'feature_list', or 'query_themes'.
+ 	*/
+	$args = apply_filters( 'themes_api_args', $args, $action );
+	
+	/**
+	 * Filter whether to override the WordPress.org Themes API.
+	 *
+	 * Returning a value of true to this filter allows a theme to completely
+	 * override the built-in WordPress.org API.
+	 * 
+	 * @since 2.8.0
+	 *
+	 * @param bool   $bool   Whether to override the WordPress.org Themes API. Default false.
+	 * @param string $action Requested action. Likely values are 'theme_information',
+	 *                       'feature_list', or 'query_themes'.
+	 * @param object $args   Arguments used to query for installer pages from the Themes API.
+	 */
+	$res = apply_filters( 'themes_api', false, $action, $args );
 
 	if ( ! $res ) {
-		$request = wp_remote_post('http://api.wordpress.org/themes/info/1.0/', array( 'body' => array('action' => $action, 'request' => serialize($args))) );
+		$url = $http_url = 'http://api.wordpress.org/themes/info/1.0/';
+		if ( $ssl = wp_http_supports( array( 'ssl' ) ) )
+			$url = set_url_scheme( $url, 'https' );
+
+		$args = array(
+			'body' => array(
+				'action' => $action,
+				'request' => serialize( $args )
+			)
+		);
+		$request = wp_remote_post( $url, $args );
+
+		if ( $ssl && is_wp_error( $request ) ) {
+			trigger_error( __( 'An unexpected error occurred. Something may be wrong with WordPress.org or this server&#8217;s configuration. If you continue to have problems, please try the <a href="http://wordpress.org/support/">support forums</a>.' ) . ' ' . '(WordPress could not establish a secure connection to WordPress.org. Please contact your server administrator.)', headers_sent() || WP_DEBUG ? E_USER_WARNING : E_USER_NOTICE );
+			$request = wp_remote_post( $http_url, $args );
+		}
+
 		if ( is_wp_error($request) ) {
 			$res = new WP_Error('themes_api_failed', __( 'An unexpected error occurred. Something may be wrong with WordPress.org or this server&#8217;s configuration. If you continue to have problems, please try the <a href="http://wordpress.org/support/">support forums</a>.' ), $request->get_error_message() );
 		} else {
@@ -292,5 +333,15 @@ function themes_api($action, $args = null) {
 		}
 	}
 
-	return apply_filters('themes_api_result', $res, $action, $args);
+	/**
+	 * Filter the returned WordPress.org Themes API response.
+	 *
+	 * @since 2.8.0
+	 *
+	 * @param array|object $res    WordPress.org Themes API response.
+	 * @param string       $action Requested action. Likely values are 'theme_information',
+	 *                             'feature_list', or 'query_themes'.
+	 * @param object       $args   Arguments used to query for installer pages from the WordPress.org Themes API.
+	 */
+	return apply_filters( 'themes_api_result', $res, $action, $args );
 }

@@ -1,19 +1,28 @@
-<div class="featured-content-wrapper">
-	<div id="featured-content" class="featured-content clearfix">
+<?php
+/**
+ * The template for displaying featured content
+ *
+ * @package WordPress
+ * @subpackage Twenty_Fourteen
+ * @since Twenty Fourteen 1.0
+ */
+?>
 
-		<?php
-			do_action( 'twentyfourteen_featured_posts_before' );
+<div id="featured-content" class="featured-content">
+	<div class="featured-content-inner">
+	<?php
+		do_action( 'twentyfourteen_featured_posts_before' );
 
-			$featured_posts = twentyfourteen_get_featured_posts();
-			foreach ( (array) $featured_posts as $order => $post ) :
-				setup_postdata( $post );
-				get_template_part( 'content', 'featured-post' );
-			endforeach;
+		$featured_posts = twentyfourteen_get_featured_posts();
+		foreach ( (array) $featured_posts as $order => $post ) :
+			setup_postdata( $post );
 
-			do_action( 'twentyfourteen_featured_posts_after' );
+			get_template_part( 'content', 'featured-post' );
+		endforeach;
 
-			wp_reset_postdata();
-		?>
+		do_action( 'twentyfourteen_featured_posts_after' );
 
-	</div><!-- .featured-content -->
-</div><!-- .featured-content-wrapper -->
+		wp_reset_postdata();
+	?>
+	</div><!-- .featured-content-inner -->
+</div><!-- #featured-content .featured-content -->

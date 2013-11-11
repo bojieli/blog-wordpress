@@ -1169,10 +1169,15 @@ function convert_chars($content, $deprecated = '') {
  * @return string Balanced text
  */
 function balanceTags( $text, $force = false ) {
-	if ( $force || get_option('use_balanceTags') == 1 )
-		return force_balance_tags( $text );
-	else
-		return $text;
+	if ( $force || get_option('use_balanceTags') == 1 ) {
+		$balance_tags_delimiters = apply_filters( 'balance_tags_delimiters', array( '<!--more.*?-->', '<!--nextpage-->' ) ); 
+		// Capture lets PREG_SPLIT_DELIM_CAPTURE return the delimiters
+		$delimiters_regex = '/(' . implode( '|', $balance_tags_delimiters ) . ')/';
+		$parts = preg_split( $delimiters_regex, $text, -1, PREG_SPLIT_DELIM_CAPTURE );
+		return implode( '', array_map( 'force_balance_tags', $parts ) );
+	}
+
+	return $text;
 }
 
 /**
@@ -1483,25 +1488,26 @@ function rawurlencode_deep( $value ) {
  *
  * @since 0.71
  *
- * @param string $emailaddy Email address.
- * @param int $mailto Optional. Range from 0 to 1. Used for encoding.
+ * @param string $email_address Email address.
+ * @param int $hex_encoding Optional. Set to 1 to enable hex encoding.
  * @return string Converted email address.
  */
-function antispambot($emailaddy, $mailto=0) {
-	$emailNOSPAMaddy = '';
-	srand ((float) microtime() * 1000000);
-	for ($i = 0; $i < strlen($emailaddy); $i = $i + 1) {
-		$j = floor(rand(0, 1+$mailto));
-		if ($j==0) {
-			$emailNOSPAMaddy .= '&#'.ord(substr($emailaddy,$i,1)).';';
-		} elseif ($j==1) {
-			$emailNOSPAMaddy .= substr($emailaddy,$i,1);
-		} elseif ($j==2) {
-			$emailNOSPAMaddy .= '%'.zeroise(dechex(ord(substr($emailaddy, $i, 1))), 2);
+function antispambot( $email_address, $hex_encoding = 0 ) {
+	$email_no_spam_address = '';
+	for ( $i = 0; $i < strlen( $email_address ); $i++ ) {
+		$j = rand( 0, 1 + $hex_encoding );
+		if ( $j == 0 ) {
+			$email_no_spam_address .= '&#' . ord( $email_address[$i] ) . ';';
+		} elseif ( $j == 1 ) {
+			$email_no_spam_address .= $email_address[$i];
+		} elseif ( $j == 2 ) {
+			$email_no_spam_address .= '%' . zeroise( dechex( ord( $email_address[$i] ) ), 2 );
 		}
 	}
-	$emailNOSPAMaddy = str_replace('@','&#64;',$emailNOSPAMaddy);
-	return $emailNOSPAMaddy;
+
+	$email_no_spam_address = str_replace( '@', '&#64;', $email_no_spam_address );
+
+	return $email_no_spam_address;
 }
 
 /**
@@ -1600,8 +1606,15 @@ function _make_email_clickable_cb($matches) {
 function make_clickable( $text ) {
 	$r = '';
 	$textarr = preg_split( '/(<[^<>]+>)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE ); // split out HTML tags
+	$nested_code_pre = 0; // Keep track of how many levels link is nested inside <pre> or <code>
 	foreach ( $textarr as $piece ) {
-		if ( empty( $piece ) || ( $piece[0] == '<' && ! preg_match('|^<\s*[\w]{1,20}+://|', $piece) ) ) {
+
+		if ( preg_match( '|^<code[\s>]|', $piece ) || preg_match( '|^<pre[\s>]|', $piece ) )
+			$nested_code_pre++;
+		elseif ( ( '</code>' === $piece || '</pre>' === $piece ) && $nested_code_pre )
+			$nested_code_pre--;
+
+		if ( $nested_code_pre || empty( $piece ) || ( $piece[0] === '<' && ! preg_match( '|^<\s*[\w]{1,20}+://|', $piece ) ) ) {
 			$r .= $piece;
 			continue;
 		}
@@ -1743,29 +1756,29 @@ function wp_rel_nofollow_callback( $matches ) {
 /**
  * Convert one smiley code to the icon graphic file equivalent.
  *
+ * Callback handler for {@link convert_smilies()}.
  * Looks up one smiley code in the $wpsmiliestrans global array and returns an
  * <img> string for that smiley.
  *
  * @global array $wpsmiliestrans
  * @since 2.8.0
  *
- * @param string $smiley Smiley code to convert to image.
+ * @param array $matches Single match. Smiley code to convert to image.
  * @return string Image string for smiley.
  */
-function translate_smiley($smiley) {
+function translate_smiley( $matches ) {
 	global $wpsmiliestrans;
 
-	if (count($smiley) == 0) {
+	if ( count( $matches ) == 0 )
 		return '';
-	}
 
-	$smiley = trim(reset($smiley));
-	$img = $wpsmiliestrans[$smiley];
-	$smiley_masked = esc_attr($smiley);
+	$smiley = trim( reset( $matches ) );
+	$img = $wpsmiliestrans[ $smiley ];
+	$smiley_masked = esc_attr( $smiley );
 
-	$srcurl = apply_filters('smilies_src', includes_url("images/smilies/$img"), $img, site_url());
+	$src_url = apply_filters( 'smilies_src', includes_url( "images/smilies/$img" ), $img, site_url() );
 
-	return " <img src='$srcurl' alt='$smiley_masked' class='wp-smiley' /> ";
+	return " <img src='$src_url' alt='$smiley_masked' class='wp-smiley' /> ";
 }
 
 /**
@@ -2570,21 +2583,16 @@ function wp_htmledit_pre($output) {
  * @since 2.8.1
  * @access private
  *
- * @param string|array $search
- * @param string $subject
- * @return string The processed string
+ * @param string|array $search The value being searched for, otherwise known as the needle. An array may be used to designate multiple needles.
+ * @param string $subject The string being searched and replaced on, otherwise known as the haystack.
+ * @return string The string with the replaced svalues.
  */
 function _deep_replace( $search, $subject ) {
-	$found = true;
 	$subject = (string) $subject;
-	while ( $found ) {
-		$found = false;
-		foreach ( (array) $search as $val ) {
-			while ( strpos( $subject, $val ) !== false ) {
-				$found = true;
-				$subject = str_replace( $val, '', $subject );
-			}
-		}
+
+	$count = 1;
+	while ( $count ) {
+		$subject = str_replace( $search, '', $subject, $count );
 	}
 
 	return $subject;
@@ -2598,8 +2606,8 @@ function _deep_replace( $search, $subject ) {
  * is preparing an array for use in an IN clause.
  *
  * @since 2.8.0
- * @param string $data Unescaped data
- * @return string Escaped data
+ * @param string|array $data Unescaped data
+ * @return string|array Escaped data
  */
 function esc_sql( $data ) {
 	global $wpdb;
@@ -2960,6 +2968,11 @@ function sanitize_option($option, $value) {
 		case 'tag_base':
 			$value = esc_url_raw( $value );
 			$value = str_replace( 'http://', '', $value );
+			break;
+
+		case 'default_role' :
+			if ( ! get_role( $value ) && get_role( 'subscriber' ) )
+				$value = 'subscriber';
 			break;
 	}
 

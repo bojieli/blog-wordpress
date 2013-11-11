@@ -8,7 +8,7 @@
  */
 
 /** Load WordPress Administration Bootstrap */
-require_once( './admin.php' );
+require_once( dirname( __FILE__ ) . '/admin.php' );
 
 if ( ! is_multisite() )
 	wp_die( __( 'Multisite support is not enabled.' ) );
@@ -25,7 +25,6 @@ get_current_screen()->add_help_tab( array(
 		'content' =>
 			'<p>' . __('This screen sets and changes options for the network as a whole. The first site is the main site in the network and network options are pulled from that original site&#8217;s options.') . '</p>' .
 			'<p>' . __('Operational settings has fields for the network&#8217;s name and admin email.') . '</p>' .
-			'<p>' . __('Dashboard Site is an option to give a site to users who do not have a site on the system. Their default role is Subscriber, but that default can be changed. The Admin Notice Feed can provide a notice on all dashboards of the latest post via RSS or Atom, or provide no such notice if left blank.') . '</p>' .
 			'<p>' . __('Registration settings can disable/enable public signups. If you let others sign up for a site, install spam plugins. Spaces, not commas, should separate names banned as sites for this network.') . '</p>' .
 			'<p>' . __('New site settings are defaults applied when a new site is created in the network. These include welcome email for when a new site or user account is registered, and what&#8127;s put in the first post, page, comment, comment author, and comment URL.') . '</p>' .
 			'<p>' . __('Upload settings control the size of the uploaded files and the amount of available upload space for each site. You can change the default value for specific sites when you edit a particular site. Allowed file types are also listed (space separated only).') . '</p>' .
@@ -40,7 +39,8 @@ get_current_screen()->set_help_sidebar(
 );
 
 if ( $_POST ) {
-	do_action( 'wpmuadminedit' , '' );
+	/** This action is documented in wp-admin/network/edit.php */
+	do_action( 'wpmuadminedit' );
 
 	check_admin_referer( 'siteoptions' );
 
@@ -65,14 +65,18 @@ if ( $_POST ) {
 		update_site_option( $option_name, $value );
 	}
 
-	// Update more options here
+	/**
+	 * Fires after the network options are updated.
+	 * 
+	 * @since MU
+	 */
 	do_action( 'update_wpmu_options' );
 
 	wp_redirect( add_query_arg( 'updated', 'true', network_admin_url( 'settings.php' ) ) );
 	exit();
 }
 
-include( '../admin-header.php' );
+include( ABSPATH . 'wp-admin/admin-header.php' );
 
 if ( isset( $_GET['updated'] ) ) {
 	?><div id="message" class="updated"><p><?php _e( 'Options saved.' ) ?></p></div><?php
@@ -286,6 +290,21 @@ if ( isset( $_GET['updated'] ) ) {
 				<td>
 			<?php
 			$menu_perms = get_site_option( 'menu_items' );
+			/**
+			 * Filter available network-wide administration menu options.
+			 *
+			 * Options returned to this filter are output as individual checkboxes that, when selected,
+			 * enable site administrator access to the specified administration menu in certain contexts.
+			 *
+			 * Adding options for specific menus here hinges on the appropriate checks and capabilities
+			 * being in place in the site dashboard on the other side. For instance, when the single
+			 * default option, 'plugins' is enabled, site administrators are granted access to the Plugins
+			 * screen in their individual sites' dashboards.
+			 *
+			 * @since MU
+			 * 
+			 * @param array $admin_menus The menu items available.
+			 */
 			$menu_items = apply_filters( 'mu_menu_items', array( 'plugins' => __( 'Plugins' ) ) );
 			foreach ( (array) $menu_items as $key => $val ) {
 				echo "<label><input type='checkbox' name='menu_items[" . $key . "]' value='1'" . ( isset( $menu_perms[$key] ) ? checked( $menu_perms[$key], '1', false ) : '' ) . " /> " . esc_html( $val ) . "</label><br/>";
@@ -295,10 +314,15 @@ if ( isset( $_GET['updated'] ) ) {
 			</tr>
 		</table>
 
-		<?php do_action( 'wpmu_options' ); // Add more options here ?>
-
+		<?php 
+		/**
+		 * Fires at the end of the Network Settings form, before the submit button.
+		 *
+		 * @since MU
+		 */
+		do_action( 'wpmu_options' ); ?>
 		<?php submit_button(); ?>
 	</form>
 </div>
 
-<?php include( '../admin-footer.php' ); ?>
+<?php include( ABSPATH . 'wp-admin/admin-footer.php' ); ?>
