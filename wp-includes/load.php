@@ -326,8 +326,12 @@ function require_wp_db() {
 	global $wpdb;
 
 	require_once( ABSPATH . WPINC . '/wp-db.php' );
+    // USTC Blog connects database automatically, never override
+    // See lttt's case http://servers.blog.ustc.edu.cn/index.php/2013/11/blog-protect-wpdb-class-from-overriding
+    /*
 	if ( file_exists( WP_CONTENT_DIR . '/db.php' ) )
 		require_once( WP_CONTENT_DIR . '/db.php' );
+    */
 
 	if ( isset( $wpdb ) )
 		return;
