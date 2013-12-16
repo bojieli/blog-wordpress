@@ -9,13 +9,15 @@
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
-	<a class="post-thumbnail" href="<?php the_permalink(); ?>" rel="<?php the_ID(); ?>">
+	<a class="post-thumbnail" href="<?php the_permalink(); ?>">
 	<?php
+		// Output the featured image.
 		if ( has_post_thumbnail() ) :
-			if ( 'grid' == get_theme_mod( 'featured_content_layout' ) )
-				the_post_thumbnail( 'post-thumbnail' );
-			else
-				the_post_thumbnail( 'post-thumbnail-full-width' );
+			if ( 'grid' == get_theme_mod( 'featured_content_layout' ) ) {
+				the_post_thumbnail();
+			} else {
+				the_post_thumbnail( 'twentyfourteen-full-width' );
+			}
 		endif;
 	?>
 	</a>

@@ -7,17 +7,19 @@
  * @since Twenty Fourteen 1.0
  */
 
+// Retrieve attachment metadata.
 $metadata = wp_get_attachment_metadata();
 
 get_header();
 ?>
 
-<div id="main-content" class="main-content">
 	<section id="primary" class="content-area image-attachment">
 		<div id="content" class="site-content" role="main">
 
-		<?php while ( have_posts() ) : the_post(); ?>
-
+	<?php
+		// Start the Loop.
+		while ( have_posts() ) : the_post();
+	?>
 			<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 				<header class="entry-header">
 					<?php the_title( '<h1 class="entry-title">', '</h1>' ); ?>
@@ -56,26 +58,12 @@ get_header();
 						) );
 					?>
 				</div><!-- .entry-content -->
-
-				<footer class="entry-meta">
-					<?php
-						if ( comments_open() && pings_open() ) : // Comments and trackbacks open
-							printf( __( '<a class="comment-link" href="#respond">Post a comment</a> or leave a trackback: <a class="trackback-link" href="%s" rel="trackback">Trackback URL</a>.', 'twentyfourteen' ), get_trackback_url() );
-						elseif ( ! comments_open() && pings_open() ) : // Only trackbacks open
-							printf( __( 'Comments are closed, but you can leave a trackback: <a class="trackback-link" href="%s" rel="trackback">Trackback URL</a>.', 'twentyfourteen' ), get_trackback_url() );
-						elseif ( comments_open() && ! pings_open() ) : // Only comments open
-							_e( 'Trackbacks are closed, but you can <a class="comment-link" href="#respond">post a comment</a>.', 'twentyfourteen' );
-						elseif ( ! comments_open() && ! pings_open() ) : // Comments and trackbacks closed
-							_e( 'Both comments and trackbacks are currently closed.', 'twentyfourteen' );
-						endif;
-					?>
-				</footer><!-- .entry-meta -->
 			</article><!-- #post-## -->
 
 			<nav id="image-navigation" class="navigation image-navigation">
 				<div class="nav-links">
-				<?php previous_image_link( false, __( '<div class="previous-image">Previous Image</div>', 'twentyfourteen' ) ); ?>
-				<?php next_image_link( false, __( '<div class="next-image">Next Image</div>', 'twentyfourteen' ) ); ?>
+				<?php previous_image_link( false, '<div class="previous-image">' . __( 'Previous Image', 'twentyfourteen' ) . '</div>' ); ?>
+				<?php next_image_link( false, '<div class="next-image">' . __( 'Next Image', 'twentyfourteen' ) . '</div>' ); ?>
 				</div><!-- .nav-links -->
 			</nav><!-- #image-navigation -->
 
@@ -85,7 +73,6 @@ get_header();
 
 		</div><!-- #content -->
 	</section><!-- #primary -->
-</div><!-- #main-content -->
 
 <?php
 get_sidebar();

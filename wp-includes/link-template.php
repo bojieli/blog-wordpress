@@ -736,12 +736,13 @@ function edit_term_link( $link = '', $before = '', $after = '', $term = null, $e
 }
 
 /**
-* Retrieve permalink for search.
-*
-* @since  3.0.0
-* @param string $query Optional. The query string to use. If empty the current query is used.
-* @return string
-*/
+ * Retrieve permalink for search.
+ *
+ * @since  3.0.0
+ *
+ * @param string $query Optional. The query string to use. If empty the current query is used.
+ * @return string
+ */
 function get_search_link( $query = '' ) {
 	global $wp_rewrite;
 
@@ -2186,10 +2187,10 @@ function plugins_url($path = '', $plugin = '') {
  * @return string Site url link with optional path appended.
 */
 function network_site_url( $path = '', $scheme = null ) {
-	global $current_site;
-
 	if ( ! is_multisite() )
 		return site_url($path, $scheme);
+
+	$current_site = get_current_site();
 
 	if ( 'relative' == $scheme )
 		$url = $current_site->path;
@@ -2217,11 +2218,10 @@ function network_site_url( $path = '', $scheme = null ) {
  * @return string Home url link with optional path appended.
 */
 function network_home_url( $path = '', $scheme = null ) {
-	global $current_site;
-
 	if ( ! is_multisite() )
 		return home_url($path, $scheme);
 
+	$current_site = get_current_site();
 	$orig_scheme = $scheme;
 
 	if ( ! in_array( $scheme, array( 'http', 'https', 'relative' ) ) )

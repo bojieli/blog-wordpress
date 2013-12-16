@@ -9,7 +9,7 @@
 ?>
 <div id="secondary">
 	<?php
-		$description = get_bloginfo( 'description' );
+		$description = get_bloginfo( 'description', 'display' );
 		if ( ! empty ( $description ) ) :
 	?>
 	<h2 class="site-description"><?php echo esc_html( $description ); ?></h2>
@@ -23,10 +23,7 @@
 
 	<?php if ( is_active_sidebar( 'sidebar-1' ) ) : ?>
 	<div id="primary-sidebar" class="primary-sidebar widget-area" role="complementary">
-		<?php
-			do_action( 'before_sidebar' );
-			dynamic_sidebar( 'sidebar-1' );
-		?>
-	</div><!-- #primary-sidebar .primary-sidebar -->
+		<?php dynamic_sidebar( 'sidebar-1' ); ?>
+	</div><!-- #primary-sidebar -->
 	<?php endif; ?>
 </div><!-- #secondary -->

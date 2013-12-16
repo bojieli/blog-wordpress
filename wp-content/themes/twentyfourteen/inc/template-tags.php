@@ -17,16 +17,18 @@ if ( ! function_exists( 'twentyfourteen_paging_nav' ) ) :
  */
 function twentyfourteen_paging_nav() {
 	// Don't print empty markup if there's only one page.
-	if ( $GLOBALS['wp_query']->max_num_pages < 2 )
+	if ( $GLOBALS['wp_query']->max_num_pages < 2 ) {
 		return;
+	}
 
 	$paged        = get_query_var( 'paged' ) ? intval( get_query_var( 'paged' ) ) : 1;
 	$pagenum_link = html_entity_decode( get_pagenum_link() );
 	$query_args   = array();
 	$url_parts    = explode( '?', $pagenum_link );
 
-	if ( isset( $url_parts[1] ) )
+	if ( isset( $url_parts[1] ) ) {
 		wp_parse_str( $url_parts[1], $query_args );
+	}
 
 	$pagenum_link = remove_query_arg( array_keys( $query_args ), $pagenum_link );
 	$pagenum_link = trailingslashit( $pagenum_link ) . '%_%';
@@ -34,7 +36,8 @@ function twentyfourteen_paging_nav() {
 	$format  = $GLOBALS['wp_rewrite']->using_index_permalinks() && ! strpos( $pagenum_link, 'index.php' ) ? 'index.php/' : '';
 	$format .= $GLOBALS['wp_rewrite']->using_permalinks() ? user_trailingslashit( 'page/%#%', 'paged' ) : '?paged=%#%';
 
-	$links   = paginate_links( array(
+	// Set up paginated links.
+	$links = paginate_links( array(
 		'base'     => $pagenum_link,
 		'format'   => $format,
 		'total'    => $GLOBALS['wp_query']->max_num_pages,
@@ -72,8 +75,9 @@ function twentyfourteen_post_nav() {
 	$previous = ( is_attachment() ) ? get_post( get_post()->post_parent ) : get_adjacent_post( false, '', true );
 	$next     = get_adjacent_post( false, '', false );
 
-	if ( ! $next && ! $previous )
+	if ( ! $next && ! $previous ) {
 		return;
+	}
 
 	?>
 	<nav class="navigation post-navigation" role="navigation">
@@ -102,10 +106,12 @@ if ( ! function_exists( 'twentyfourteen_posted_on' ) ) :
  * @return void
  */
 function twentyfourteen_posted_on() {
-	if ( is_sticky() && is_home() && ! is_paged() )
+	if ( is_sticky() && is_home() && ! is_paged() ) {
 		echo '<span class="featured-post">' . __( 'Sticky', 'twentyfourteen' ) . '</span>';
+	}
 
-	printf( __( '<span class="entry-date"><a href="%1$s" rel="bookmark"><time class="entry-date" datetime="%2$s">%3$s</time></a></span> <span class="byline"><span class="author vcard"><a class="url fn n" href="%4$s" rel="author">%5$s</a></span></span>', 'twentyfourteen' ),
+	// Set up and print post meta information.
+	printf( '<span class="entry-date"><a href="%1$s" rel="bookmark"><time class="entry-date" datetime="%2$s">%3$s</time></a></span> <span class="byline"><span class="author vcard"><a class="url fn n" href="%4$s" rel="author">%5$s</a></span></span>',
 		esc_url( get_permalink() ),
 		esc_attr( get_the_date( 'c' ) ),
 		esc_html( get_the_date() ),
@@ -123,7 +129,7 @@ endif;
  * @return boolean true if blog has more than 1 category
  */
 function twentyfourteen_categorized_blog() {
-	if ( false === ( $all_the_cool_cats = get_transient( 'all_the_cool_cats' ) ) ) {
+	if ( false === ( $all_the_cool_cats = get_transient( 'twentyfourteen_category_count' ) ) ) {
 		// Create an array of all the categories that are attached to posts
 		$all_the_cool_cats = get_categories( array(
 			'hide_empty' => 1,
@@ -132,10 +138,10 @@ function twentyfourteen_categorized_blog() {
 		// Count the number of categories that are attached to the posts
 		$all_the_cool_cats = count( $all_the_cool_cats );
 
-		set_transient( 'all_the_cool_cats', $all_the_cool_cats );
+		set_transient( 'twentyfourteen_category_count', $all_the_cool_cats );
 	}
 
-	if ( '1' != $all_the_cool_cats ) {
+	if ( 1 !== (int) $all_the_cool_cats ) {
 		// This blog has more than 1 category so twentyfourteen_categorized_blog should return true
 		return true;
 	} else {
@@ -145,7 +151,7 @@ function twentyfourteen_categorized_blog() {
 }
 
 /**
- * Flush out the transients used in twentyfourteen_categorized_blog
+ * Flush out the transients used in twentyfourteen_categorized_blog.
  *
  * @since Twenty Fourteen 1.0
  *
@@ -153,41 +159,48 @@ function twentyfourteen_categorized_blog() {
  */
 function twentyfourteen_category_transient_flusher() {
 	// Like, beat it. Dig?
-	delete_transient( 'all_the_cool_cats' );
+	delete_transient( 'twentyfourteen_category_count' );
 }
 add_action( 'edit_category', 'twentyfourteen_category_transient_flusher' );
 add_action( 'save_post',     'twentyfourteen_category_transient_flusher' );
 
 /**
- * Displays an optional post thumbnail, with an anchor element
- * when on index views, and a div element when on a single view.
+ * Display an optional post thumbnail.
+ *
+ * Wraps the post thumbnail in an anchor element on index
+ * views, or a div element when on single views.
+ *
+ * @since Twenty Fourteen 1.0
  *
  * @return void
 */
 function twentyfourteen_post_thumbnail() {
-	if ( post_password_required() || ! has_post_thumbnail() )
+	if ( post_password_required() || ! has_post_thumbnail() ) {
 		return;
+	}
 
 	if ( is_singular() ) :
 	?>
 
 	<div class="post-thumbnail">
 	<?php
-		if ( is_active_sidebar( 'sidebar-2' ) || wp_is_mobile() )
-			the_post_thumbnail( 'post-thumbnail' );
-		else
-			the_post_thumbnail( 'post-thumbnail-full-width' );
+		if ( ( ! is_active_sidebar( 'sidebar-2' ) || is_page_template( 'page-templates/full-width.php' ) ) ) {
+			the_post_thumbnail( 'twentyfourteen-full-width' );
+		} else {
+			the_post_thumbnail();
+		}
 	?>
 	</div>
 
 	<?php else : ?>
 
-	<a class="post-thumbnail" href="<?php the_permalink(); ?>" rel="<?php the_ID(); ?>">
+	<a class="post-thumbnail" href="<?php the_permalink(); ?>">
 	<?php
-		if ( is_active_sidebar( 'sidebar-2' ) || wp_is_mobile() )
-			the_post_thumbnail( 'post-thumbnail' );
-		else
-			the_post_thumbnail( 'post-thumbnail-full-width' );
+		if ( ( ! is_active_sidebar( 'sidebar-2' ) || is_page_template( 'page-templates/full-width.php' ) ) ) {
+			the_post_thumbnail( 'twentyfourteen-full-width' );
+		} else {
+			the_post_thumbnail();
+		}
 	?>
 	</a>
 

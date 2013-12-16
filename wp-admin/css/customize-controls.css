@@ -20,7 +20,7 @@ body {
 
 #customize-header-actions .button-primary {
 	float: right;
-	margin-top: 10px;
+	margin-top: 9px;
 }
 
 #customize-header-actions .spinner {
@@ -212,7 +212,7 @@ body {
 
 .wp-full-overlay-sidebar {
 	background: #eeeeee;
-	border: none;
+	border-right: 1px solid #ddd;
 }
 
 .collapse-sidebar {
@@ -222,18 +222,6 @@ body {
 	border-radius: 0 !important;
 }
 
-.collapse-sidebar .collapse-sidebar-label {
-	color: #ccc;
-}
-
-.collapse-sidebar .collapse-sidebar-arrow:before {
-	color: #aaa;
-}
-
-.collapse-sidebar:hover .collapse-sidebar-label,
-.collapse-sidebar:hover .collapse-sidebar-arrow:before {
-	color: #0074a2;
-}
 
 .collapse-sidebar:active,
 .collapse-sidebar:active .collapse-sidebar-label,
@@ -323,26 +311,6 @@ body {
 
 .customize-control-color .dropdown:hover .dropdown-content {
 	border-color: rgba(0, 0, 0, 0.25);
-}
-
-.customize-control-color .iris-picker {
-	border-radius: 0 !important;
-}
-
-.accordion-section input[type="text"].color-picker-hex {
-	width: 65px;
-	font-family: monospace;
-	text-align: center;
-	line-height: 16px;
-}
-
-/* The centered cursor overlaps the placeholder in webkit. Hide it when selected. */
-.accordion-section input[type="text"].color-picker-hex:focus::-webkit-input-placeholder {
-	color: transparent;
-}
-
-.accordion-section input[type="text"].color-picker-hex:-moz-placeholder {
-	color: #999;
 }
 
 /*

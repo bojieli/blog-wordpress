@@ -84,6 +84,17 @@
 .ui-sortable,
 .ui-draggable {
 	-ms-touch-action: none;
+	touch-action:     none;
+}
+
+.meta-box-sortables.ui-sortable {
+	-ms-touch-action: auto;
+	touch-action:     auto;
+}
+
+.meta-box-sortables.ui-sortable .hndle {
+	-ms-touch-action: none;
+	touch-action:     none;
 }
 
 /**
@@ -98,6 +109,10 @@
 	z-index: 160000;
 }
 
+.wp-customizer .media-modal {
+	z-index: 560000;
+}
+
 .media-modal-backdrop {
 	position: fixed;
 	top: 0;
@@ -108,6 +123,10 @@
 	background: #000;
 	opacity: 0.7;
 	z-index: 159900;
+}
+
+.wp-customizer .media-modal-backdrop {
+	z-index: 559900;
 }
 
 .media-modal-close {
@@ -245,7 +264,7 @@
 	font-weight: bold;
 	text-transform: uppercase;
 	font-size: 12px;
-	color: #777;
+	color: #666;
 	margin: 24px 0 8px;
 }
 
@@ -290,7 +309,7 @@
 	line-height: 16px;
 	text-align: right;
 	font-weight: normal;
-	color: #999;
+	color: #666;
 }
 
 .media-sidebar .setting input,
@@ -681,11 +700,13 @@
 	overflow: hidden;
 }
 
+/* @noflip */
 .attachment .thumbnail img {
 	top: 0;
 	left: 0;
 }
 
+/* @noflip */
 .attachment .thumbnail .centered {
 	position: absolute;
 	top: 0;
@@ -768,12 +789,9 @@
 	height: 24px;
 	width: 24px;
 	position: absolute;
-	top: -7px;
-	right: -7px;
+	top: -6px;
+	right: -6px;
 	outline: none;
-
-	border: 1px solid #fff;
-	box-shadow: 0 0 0 1px rgba( 0, 0, 0, 0.4 );
 }
 
 .attachment .check div {
@@ -789,17 +807,6 @@
 
 .attachment.selected .check {
 	display: block;
-}
-
-.attachment.details .check {
-	box-shadow: 0 0 0 1px #1e8cbe;
-
-	background: #1e8cbe;
-	background-image: -webkit-gradient(linear, left top, left bottom, from(#1e8cbe), to(#0074a2));
-	background-image: -webkit-linear-gradient(top, #1e8cbe, #0074a2);
-	background-image:    -moz-linear-gradient(top, #1e8cbe, #0074a2);
-	background-image:      -o-linear-gradient(top, #1e8cbe, #0074a2);
-	background-image:   linear-gradient(to bottom, #1e8cbe, #0074a2);
 }
 
 .attachment.details .check div {
@@ -857,7 +864,7 @@
 	margin-top: 16px;
 	line-height: 18px;
 	font-size: 13px;
-	color: #999;
+	color: #666;
 }
 
 /**
@@ -877,8 +884,7 @@
 	height: 10px;
 	min-width: 20px;
 	width: 0;
-	background: #aaa;
-	background: rgba( 0, 0, 0, 0.2 );
+	background: #1e8cbe;
 	border-radius: 10px;
 	-webkit-transition: width 300ms;
 	-moz-transition:    width 300ms;
@@ -1281,7 +1287,7 @@
 	min-height: 60px;
 	margin-bottom: 16px;
 	line-height: 18px;
-	color: #999;
+	color: #666;
 	border-bottom: 1px solid #e5e5e5;
 	box-shadow: 0 1px 0 #fff;
 	padding-bottom: 11px;
@@ -1460,7 +1466,7 @@
 	width: 200px;
 	font-size: 13px;
 	line-height: 24px;
-	color: #999;
+	color: #666;
 }
 
 .media-embed .setting .button-group {
@@ -1518,6 +1524,40 @@
 	float: left;
 }
 
+/**
+ * Localization
+ */
+.rtl .media-modal,
+.rtl .media-frame,
+.rtl .media-frame .search,
+.rtl .media-frame input[type="text"],
+.rtl .media-frame input[type="password"],
+.rtl .media-frame input[type="number"],
+.rtl .media-frame input[type="search"],
+.rtl .media-frame input[type="email"],
+.rtl .media-frame input[type="url"],
+.rtl .media-frame textarea,
+.rtl .media-frame select {
+	font-family: Tahoma, sans-serif;
+}
+
+:lang(he-il) .rtl .media-modal,
+:lang(he-il) .rtl .media-frame,
+:lang(he-il) .rtl .media-frame .search,
+:lang(he-il) .rtl .media-frame input[type="text"],
+:lang(he-il) .rtl .media-frame input[type="password"],
+:lang(he-il) .rtl .media-frame input[type="number"],
+:lang(he-il) .rtl .media-frame input[type="search"],
+:lang(he-il) .rtl .media-frame input[type="email"],
+:lang(he-il) .rtl .media-frame input[type="url"],
+:lang(he-il) .rtl .media-frame textarea,
+:lang(he-il) .rtl .media-frame select {
+	font-family: Arial, sans-serif;
+}
+
+
+
+
 @media only screen and (max-width: 960px) {
 	.media-frame-content .media-toolbar-primary .search,
 	.media-frame-content .media-toolbar-secondary .attachment-filters {
@@ -1534,7 +1574,7 @@
 	}
 
 	.media-menu > a {
-		padding: 4px 10px;
+		padding: 4px 5px;
 	}
 
 	.media-frame-title,
@@ -1609,13 +1649,234 @@
 	}
 
 	.media-modal-close {
-		right: 20px;
+		right: 10px;
+	}
+	
+	/* Text inputs need to be 16px, or they force zooming on iOS */
+	.media-frame input[type="text"],
+	.media-frame input[type="password"],
+	.media-frame input[type="number"],
+	.media-frame input[type="search"],
+	.media-frame input[type="email"],
+	.media-frame input[type="url"],
+	.media-frame textarea,
+	.media-frame select {
+		font-size: 16px;
 	}
 }
 
-@media only screen and (max-width: 800px) {
+/* Responsive on portrait and landscape */
+@media only screen and (max-width: 640px), screen and (max-height: 400px) {
+
+	/* Media tabs on the top */
 	.media-frame-content .media-toolbar .instructions {
 		display: none;
+	}
+
+	.media-frame-menu {
+		width: auto;
+		bottom: auto;
+		right: 0;
+		height: 60px;
+	}
+
+	.media-menu {
+		border-right: none;
+		position: relative;
+		border-bottom: 1px solid #dddddd;
+		overflow: hidden;
+		padding: 10px 0 10px 10px;
+	}
+
+	.media-menu a {
+		float: left;
+		width: 42%;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+	}
+
+	.media-frame-title {
+		display: none;
+	}
+	
+	.media-frame-toolbar {
+		position: absolute;
+		bottom: 0px;
+		left: 0;
+		right: 0;
+		background: #FFF;
+		border-top: 1px solid #DEDEDE;
+	}
+
+	.media-toolbar {
+		position: relative;
+	}
+
+	.media-frame {
+		overflow: hidden;
+	}
+
+	.attachments-browser .attachments {
+		top: 42px;
+	}
+
+	.attachment-details h3 {
+		margin-top: 45px;
+	}
+		
+	/* Shorten right-side links so they don't overlap the close button */
+	.media-menu a:nth-child(2),
+	.media-menu a:last-child {
+		width: 40%;
+	}
+
+	.media-menu .separator {
+		display: none;
+	}
+
+	.media-frame-title {
+		top: 72px;
+		left: auto;
+		height: auto;
+	}
+
+	.media-frame-title h1 {
+		line-height: 3;
+		font-size: 18px;
+	}
+
+	.media-frame-router {
+		top: 84px;
+		left: 0;
+	}
+	
+	.media-frame-content {
+		left: 0;
+		top: 118px;
+	}
+
+	.media-frame .attachments-browser {
+		padding-bottom: 300px;
+	}
+	
+	.media-sidebar {
+		border-bottom: 1px solid #dddddd;
+	}
+	
+	.media-modal {
+		width: auto;
+	}
+
+	.media-toolbar-primary, .media-toolbar-secondary {
+		height: auto;
+	}
+
+	.uploader-inline h3 {
+		margin: 0 0 .8em 0;
+	}
+
+	.uploader-inline-content {
+		top: auto;
+	}
+
+	.uploader-inline-content .upload-ui {
+		margin: 0;
+	}
+
+	.attachments-browser .attachments, .attachments-browser .uploader-inline {
+		position: relative;
+		margin-right: 180px;
+	}
+
+	/* Full-bleed modal */
+	.media-modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+	}
+
+	.media-modal-backdrop {
+		position: fixed;
+	}
+
+	.attachments-browser .attachment,
+	.attachments-browser .attachment-preview {
+		max-width: 100%;
+	}
+
+	.attachments-browser .media-toolbar-primary input.search {
+		max-width: 150px;
+	}
+
+	.uploader-inline-content {
+		position: relative;
+	}
+
+	.media-sidebar .setting input[type="checkbox"],
+	.media-sidebar .field input[type="checkbox"] {
+		width: 25px;
+	}
+
+	/* Image From Link */
+	.embed-link-settings,
+	.embed-image-settings {
+		padding-bottom: 52px;
+	}
+
+	/* Gallery */
+	.media-frame.hide-router .media-frame-content {
+		top: 73px;
+		border-top: none;
+	}
+
+	.gallery-settings h3 {
+		margin-top: 45px;
+	}
+
+}
+
+/* Landscape specific header override */
+@media screen and (max-height: 400px) {
+	.media-menu {
+		padding: 0 0 0 10px;
+	}
+
+	.media-menu a {
+		float: left;
+		width: 21%;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		padding: 10px inherit;
+	}
+
+	.media-menu a:nth-child(2),
+	.media-menu a:last-child {
+		width: 21%;
+	}
+
+	.media-modal-close {
+		top: 2px;
+	}
+
+	.media-frame-router {
+		top: 44px;
+	}
+
+	.media-frame-content {
+		top: 78px;
+	}
+	
+	.attachments-browser .attachments {
+		top: 2px;
+	}
+
+	/* Prevent unnecessary scrolling on title input */
+	.embed-link-settings {
+		overflow: visible;
 	}
 }
 
@@ -1623,19 +1884,6 @@
 	.media-frame-content .media-toolbar .search,
 	.media-frame-content .media-toolbar .attachment-filters {
 		max-width: 85px;
-	}
-}
-
-/* Use the same min-width as in the admin */
-@media only screen and (max-width: 600px) {
-	.media-modal {
-		width: 540px;
-		position: absolute;
-	}
-
-	.media-modal-backdrop {
-		width: 600px;
-		position: absolute;
 	}
 }
 

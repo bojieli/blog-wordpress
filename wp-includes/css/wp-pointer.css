@@ -1,4 +1,4 @@
-.wp-pointer-content {	
+.wp-pointer-content {
 	padding: 0 0 10px;
 	position: relative;
 	font-size: 13px;
@@ -19,13 +19,20 @@
 }
 
 .wp-pointer-content h3:before {
+	background: #fff;
+	border-radius: 50%;
+	color: #2ea2cc;
+	content: '\f227';
+	font: normal 20px/1.6 'dashicons';
 	position: absolute;
-	top: 0;
+	top: 8px;
 	left: 15px;
-	content: ' ';
-	width: 36px;
-	height: 100%;
-	background: url('../images/icon-pointer-flag.png') 0 50% no-repeat;
+	speak: none;
+	text-align: center;
+	width: 32px;
+	height: 32px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 .wp-pointer-content p {
@@ -50,16 +57,18 @@
 }
 
 .wp-pointer-buttons a.close:before {
-	font-size: 13px;
+	content: '\f153';
+	display: block !important;
+	font: normal 13px/1 'dashicons';
+	speak: none;
+	margin: 2px 0;
+	text-align: center;
+	-webkit-font-smoothing: antialiased !important;
 	width: 10px;
 	height: 100%;
 	position: absolute;
 	left: -12px;
 	top: 1px;
-}
-
-.wp-pointer-buttons a.close:hover:before {
-	background-position:100% 50%;
 }
 
 /* The arrow base class must take up no space, even with transparent borders. */
@@ -91,10 +100,11 @@
 	padding-bottom: 13px;
 }
 
+/* @noflip */
 .wp-pointer-left {
 	padding-left: 13px;
 }
-
+/* @noflip */
 .wp-pointer-right {
 	padding-right: 13px;
 }
@@ -126,45 +136,23 @@
 	border-top-color: #fff;
 }
 
+/* @noflip */
 .wp-pointer-left .wp-pointer-arrow {
 	left: 0;
 	border-width: 17px 15px 17px 0;
 	border-right-color: #fff;
 }
 
+/* @noflip */
 .wp-pointer-right .wp-pointer-arrow {
 	right:0;
 	border-width: 17px 0 17px 15px;
 	border-left-color: #fff;
 }
 
-/* - RTL
-------------------------------------------------------------------------------*/
-
-.rtl .wp-pointer-content h3 {
-	padding-right: 60px;
-	padding-left: 18px;
-}
-
-.rtl .wp-pointer-content h3:before {
-	right: 15px;
-}
-
-.rtl .wp-pointer-buttons a {
-	float: left;
-}
-
-.rtl .wp-pointer-buttons a.close {
-	padding-right:3px;
-	padding-left: 0;
-}
-
-.rtl .wp-pointer-buttons a.close:before {
-	right:-10px;
-}
-
-.rtl .wp-pointer-top .wp-pointer-arrow,
-.rtl .wp-pointer-bottom .wp-pointer-arrow,
-.rtl .wp-pointer-undefined .wp-pointer-arrow {
-	right: 50px;
+/* Disable pointers at responsive sizes */
+@media screen and ( max-width: 782px ) {
+	.wp-pointer {
+		display: none;
+	}
 }

@@ -4,22 +4,23 @@
  * Adapted from FlexSlider v2.2.0, copyright 2012 WooThemes
  * @link http://www.woothemes.com/flexslider/
  */
-
+/* global DocumentTouch:true,setImmediate:true,featuredSliderDefaults:true,MSGesture:true */
 ( function( $ ) {
 	// FeaturedSlider: object instance.
 	$.featuredslider = function( el, options ) {
-		var slider = $( el );
-
-		// Make variables public.
-		slider.vars = $.extend( {}, $.featuredslider.defaults, options );
-
-		var namespace = slider.vars.namespace,
+		var slider = $( el ),
 			msGesture = window.navigator && window.navigator.msPointerEnabled && window.MSGesture,
 			touch = ( ( 'ontouchstart' in window ) || msGesture || window.DocumentTouch && document instanceof DocumentTouch ), // MSFT specific.
 			eventType = 'click touchend MSPointerUp',
 			watchedEvent = '',
 			watchedEventClearTimer,
-			methods = {};
+			methods = {},
+			namespace;
+
+		// Make variables public.
+		slider.vars = $.extend( {}, $.featuredslider.defaults, options );
+
+		namespace = slider.vars.namespace,
 
 		// Store a reference to the slider object.
 		$.data( el, 'featuredslider', slider );
@@ -36,12 +37,15 @@
 				slider.container = $( slider.containerSelector, slider );
 				slider.count = slider.slides.length;
 				slider.prop = 'marginLeft';
+				slider.isRtl = $( 'body' ).hasClass( 'rtl' );
 				slider.args = {};
 				// TOUCH
 				slider.transitions = ( function() {
 					var obj = document.createElement( 'div' ),
-						props = ['perspectiveProperty', 'WebkitPerspective', 'MozPerspective', 'OPerspective', 'msPerspective'];
-					for ( var i in props ) {
+						props = ['perspectiveProperty', 'WebkitPerspective', 'MozPerspective', 'OPerspective', 'msPerspective'],
+						i;
+
+					for ( i in props ) {
 						if ( obj.style[ props[i] ] !== undefined ) {
 							slider.pfx = props[i].replace( 'Perspective', '' ).toLowerCase();
 							slider.prop = '-' + slider.pfx + '-transform';
@@ -69,9 +73,15 @@
 				// KEYBOARD
 				if ( $( slider.containerSelector ).length === 1 ) {
 					$( document ).bind( 'keyup', function( event ) {
-						var keycode = event.keyCode;
+						var keycode = event.keyCode,
+							target = false;
 						if ( ! slider.animating && ( keycode === 39 || keycode === 37 ) ) {
-							var target = ( keycode === 39 ) ? slider.getTarget( 'next' ) : ( keycode === 37 ) ? slider.getTarget( 'prev' ) : false;
+							if ( keycode === 39 ) {
+								target = slider.getTarget( 'next' );
+							} else if ( keycode === 37 ) {
+								target = slider.getTarget( 'prev' );
+							}
+
 							slider.featureAnimate( target );
 						}
 					} );
@@ -95,12 +105,13 @@
 					var type = 'control-paging',
 						j = 1,
 						item,
-						slide;
+						slide,
+						i;
 
 					slider.controlNavScaffold = $( '<ol class="' + namespace + 'control-nav ' + namespace + type + '"></ol>' );
 
 					if ( slider.pagingCount > 1 ) {
-						for ( var i = 0; i < slider.pagingCount; i++ ) {
+						for ( i = 0; i < slider.pagingCount; i++ ) {
 							slide = slider.slides.eq( i );
 							item = '<a>' + j + '</a>';
 							slider.controlNavScaffold.append( '<li>' + item + '</li>' );
@@ -232,8 +243,11 @@
 						localX = e.touches[0].pageX;
 						localY = e.touches[0].pageY;
 
-						offset = ( slider.animatingTo === slider.last ) ? 0 :
-								 ( slider.currentSlide === slider.last ) ? slider.limit : ( slider.currentSlide + slider.cloneOffset ) * cwidth;
+						offset = ( slider.currentSlide + slider.cloneOffset ) * cwidth;
+						if ( slider.animatingTo === slider.last && slider.direction !== 'next' ) {
+							offset = 0;
+						}
+
 						startX = localX;
 						startY = localY;
 
@@ -250,9 +264,7 @@
 					dx = startX - localX;
 					scrolling = Math.abs( dx ) < Math.abs( localY - startY );
 
-					var fxms = 500;
-
-					if ( ! scrolling || Number( new Date() ) - startT > fxms ) {
+					if ( ! scrolling ) {
 						e.preventDefault();
 						if ( slider.transitions ) {
 							slider.setProps( offset + dx, 'setTouch' );
@@ -287,19 +299,24 @@
 						accDx = 0;
 						cwidth = slider.w;
 						startT = Number( new Date() );
-						offset = ( slider.animatingTo === slider.last ) ? 0 : ( slider.currentSlide === slider.last ) ? slider.limit : ( slider.currentSlide + slider.cloneOffset ) * cwidth;
+						offset = ( slider.currentSlide + slider.cloneOffset ) * cwidth;
+						if ( slider.animatingTo === slider.last && slider.direction !== 'next' ) {
+							offset = 0;
+						}
 					}
 				}
 
 				function onMSGestureChange( e ) {
 					e.stopPropagation();
-					var slider = e.target._slider;
+					var slider = e.target._slider,
+						transX,
+						transY;
 					if ( ! slider ) {
 						return;
 					}
 
-					var transX = -e.translationX,
-						transY = -e.translationY;
+					transX = -e.translationX,
+					transY = -e.translationY;
 
 					// Accumulate translations.
 					accDx = accDx + transX;
@@ -307,7 +324,7 @@
 					scrolling = Math.abs( accDx ) < Math.abs( -transY );
 
 					if ( e.detail === e.MSGESTURE_FLAG_INERTIA ) {
-						setImmediate( function () {  // MSFT specific.
+						setImmediate( function () { // MSFT specific.
 							el._gesture.stop();
 						} );
 
@@ -324,14 +341,16 @@
 
 				function onMSGestureEnd( e ) {
 					e.stopPropagation();
-					var slider = e.target._slider;
+					var slider = e.target._slider,
+						updateDx,
+						target;
 					if ( ! slider ) {
 						return;
 					}
 
 					if ( slider.animatingTo === slider.currentSlide && ! scrolling && dx !== null ) {
-						var updateDx = dx,
-						    target = ( updateDx > 0 ) ? slider.getTarget( 'next' ) : slider.getTarget( 'prev' );
+						updateDx = dx,
+						target = ( updateDx > 0 ) ? slider.getTarget( 'next' ) : slider.getTarget( 'prev' );
 
 						slider.featureAnimate( target );
 					}
@@ -431,6 +450,12 @@
 
 		slider.getTarget = function( dir ) {
 			slider.direction = dir;
+
+			// Swap for RTL.
+			if ( slider.isRtl ) {
+				dir = 'next' === dir ? 'prev' : 'next';
+			}
+
 			if ( dir === 'next' ) {
 				return ( slider.currentSlide === slider.last ) ? 0 : slider.currentSlide + 1;
 			} else {
@@ -440,8 +465,7 @@
 
 		slider.setProps = function( pos, special, dur ) {
 			var target = ( function() {
-				var posCheck = ( pos ) ? pos : slider.itemW * slider.animatingTo,
-					posCalc = ( function() {
+				var posCalc = ( function() {
 						switch ( special ) {
 							case 'setTotal': return ( slider.currentSlide + slider.cloneOffset ) * pos;
 							case 'setTouch': return pos;
