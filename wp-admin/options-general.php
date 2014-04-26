@@ -304,13 +304,13 @@ endfor;
 <?php do_settings_fields('general', 'default'); ?>
 <?php
 	$languages = get_available_languages();
-	if ( is_multisite() && !empty( $languages ) ):
+	if ( !empty( $languages ) ):
 ?>
 	<tr>
 		<th width="33%" scope="row"><?php _e('Site Language') ?></th>
 		<td>
 			<select name="WPLANG" id="WPLANG">
-				<?php mu_dropdown_languages( $languages, get_option('WPLANG') ); ?>
+				<?php mu_dropdown_languages( $languages, (get_option('WPLANG') ? get_option('WPLANG') : WPLANG) ); ?>
 			</select>
 		</td>
 	</tr>

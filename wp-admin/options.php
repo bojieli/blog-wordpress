@@ -92,6 +92,7 @@ if ( !is_multisite() ) {
 	$whitelist_options['general'][] = 'admin_email';
 	$whitelist_options['general'][] = 'users_can_register';
 	$whitelist_options['general'][] = 'default_role';
+	$whitelist_options['general'][] = 'WPLANG';
 
 	$whitelist_options['writing'] = array_merge($whitelist_options['writing'], $mail_options);
 	$whitelist_options['writing'][] = 'ping_sites';
