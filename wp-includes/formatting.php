@@ -3239,6 +3239,7 @@ function sanitize_option($option, $value) {
 
 		case 'WPLANG':
 			$allowed = get_available_languages();
+			$allowed[] = "en_US"; // the default language
 			if ( ! in_array( $value, $allowed ) && ! empty( $value ) )
 				$value = get_option( $option );
 			break;

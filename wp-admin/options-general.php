@@ -303,6 +303,13 @@ endfor;
 </tr>
 <?php do_settings_fields('general', 'default'); ?>
 <?php
+	function show_language_option($lang, $description) {
+		echo '<option value="'.$lang.'"';
+		$curr_lang = (get_option('WPLANG') ? get_option('WPLANG') : WPLANG);
+		if ($lang == $curr_lang)
+			echo ' selected="selected"';
+		echo '>'.$description.'</option>';
+	}
 	$languages = get_available_languages();
 	if ( !empty( $languages ) ):
 ?>
@@ -310,7 +317,9 @@ endfor;
 		<th width="33%" scope="row"><?php _e('Site Language') ?></th>
 		<td>
 			<select name="WPLANG" id="WPLANG">
-				<?php mu_dropdown_languages( $languages, (get_option('WPLANG') ? get_option('WPLANG') : WPLANG) ); ?>
+				<?php echo show_language_option('zh_CN', 'Chinese (Simplified)') ?>
+				<?php echo show_language_option('en_US', 'English (US)') ?>
+				<?php echo show_language_option('zh_TW', 'Chinese (Taiwan)') ?>
 			</select>
 		</td>
 	</tr>
