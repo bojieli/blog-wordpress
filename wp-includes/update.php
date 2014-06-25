@@ -481,6 +481,9 @@ function wp_get_translation_updates() {
 			continue;
 
 		foreach ( $transient->translations as $translation ) {
+			// USTC blog: fix zh_TW keeps updating problem, seems api.wordpress.com problem (2014-06-25)
+			if ($translation['language'] == 'zh_TW')
+				continue;
 			$updates[] = (object) $translation;
 		}
 	}
