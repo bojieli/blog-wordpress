@@ -40,8 +40,6 @@ if (!defined('WP_DEBUG'))
 
 if (!defined('WP_SITEURL'))
     define('WP_SITEURL', ($_SERVER['REQUEST_SCHEME'] == "https" ? "https" : "http")."://".$_SERVER['HTTP_HOST']);
-if (!defined('WP_HOME'))
-    define('WP_HOME', WP_SITEURL);
 
 /** Set up and fix common variables */
 require_once(ABSPATH . 'wp-settings.php');
