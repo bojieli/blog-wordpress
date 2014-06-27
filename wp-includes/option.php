@@ -293,7 +293,11 @@ function update_option( $option, $value ) {
 			add_settings_error('general', 'invalid_home', __('The Site Address you entered is invalid. We only accept addresses in form http(s)://example.com'));
 			return false;
 		}
-		
+
+		$domain = $parts[2];
+		if ($domain == $_SERVER['SERVER_NAME'])
+			goto next;
+
 		if ($parts[0] == 'http:')
 			$ssl = false;
 		else if ($parts[0] == 'https:') {
@@ -308,7 +312,6 @@ function update_option( $option, $value ) {
 			return false;
 		}
 
-		$domain = $parts[2];
 		$status = set_3rdparty_domain($domain, $ssl);
 		switch ($status['status']) {
 		case 0:
@@ -328,6 +331,7 @@ function update_option( $option, $value ) {
 		}
 	}
 
+next:
 	$result = $wpdb->update( $wpdb->options, array( 'option_value' => $serialized_value ), array( 'option_name' => $option ) );
 	if ( ! $result )
 		return false;
