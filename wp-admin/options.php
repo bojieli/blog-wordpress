@@ -119,6 +119,69 @@ if ( !is_multisite() ) {
 		$whitelist_options['writing'] = array_merge($whitelist_options['writing'], $mail_options);
 }
 
+function check_upload($name, $dirname, $filename, $errormsg) {
+	if (!move_uploaded_file($_FILES[$name]['tmp_name'], "$dirname/$filename")) {
+		add_settings_error('general', 'ssl_key', __("Failed to save uploaded $errormsg"));
+		return false;
+	}
+	return true;
+}
+
+function handle_uploaded_ssl_keys($domain) {
+	if (!$_FILES['ssl-key']['size'] && !$_FILES['ssl-cert']['size'] && !$_FILES['ssl-intermediate-cert']['size']) {
+		// no files uploaded, skip
+		return false;
+	}
+	if (!$_FILES['ssl-key']['size'] || !$_FILES['ssl-cert']['size'] || !$_FILES['ssl-intermediate-cert']['size']) {
+		add_settings_error('general', 'ssl_key', __('SSL Key or Certificate or Intermediate Certificate not uploaded'));
+		return false;
+	}
+	$dirname = '/tmp/uploaded-keys/'.get_appname();
+	mkdir($dirname, 0700, true);
+	if (!check_upload('ssl-key', $dirname, 'ssl.key', 'SSL Key'))
+		return false;
+	if (!check_upload('ssl-cert', $dirname, 'ssl.crt', 'SSL Certificate'))
+		return false;
+	if (!check_upload('ssl-intermediate-cert', $dirname, 'intermediate.crt', 'Intermediate Certificate'))
+		return false;
+
+	$status = install_ssl_key($domain);
+	switch ($status['status']) {
+	case 0:
+		return true;
+	case 2:
+		add_settings_error('general', 'invalid_home', __('The domain name must contain only lower-case letters, digits and hyphen'));
+		return false;
+	case 3:
+		add_settings_error('general', 'ssl_key', __('Internal error: Failed to invoke SSL key installer'));
+		return false;
+	case 100:
+		add_settings_error('general', 'ssl_key', __('Internal error: unable to read uploaded keys'));
+		return false;
+	case 101:
+		add_settings_error('general', 'ssl_key', __('Invalid SSL key. Key must be in PEM format.'));
+		return false;
+	case 102:
+		add_settings_error('general', 'ssl_key', __('Invalid SSL certificate. Key must be in PEM format.'));
+		return false;
+	case 103:
+		add_settings_error('general', 'ssl_key', __('SSL key and certificate does not match.'));
+		return false;
+	case 104:
+		add_settings_error('general', 'ssl_key', __('Your intermediate cert is either invalid or untrusted. Please get PEM format intermediate certificate from your certificate issuer.'));
+		return false;
+	case 105:
+		add_settings_error('general', 'ssl_key', __('Your certificate and intermediate certificate does not match'));
+		return false;
+	case 106:
+		add_settings_error('general', 'ssl_key', __('Your certificate and your domain name (Site Address) does not match'));
+		return false;
+	default:
+		add_settings_error('general', 'ssl_key', __('Internal error ' . $status['status'] . '. Please contact us.'));
+		return false;
+	}
+}
+
 /**
  * Filter the options white list.
  *
@@ -149,6 +212,17 @@ if ( 'update' == $action ) {
 		$options = explode( ',', wp_unslash( $_POST[ 'page_options' ] ) );
 	} else {
 		$options = $whitelist_options[ $option_page ];
+	}
+
+	// USTC blog note: ssl keys must be uploaded before set_3rdparty_domain, which will reload nginx
+	if (!empty($_FILES)) {
+		preg_match('/^https?:\/\/([0-9a-z.-]+)$/', $_POST['home'], $matches);
+		$domain = $matches[1];
+		if ($domain != "") {
+			if (handle_uploaded_ssl_keys($domain)) {
+				define('SSL_KEY_UPDATED', true);
+			}
+		}
 	}
 
 	// Handle custom date/time formats

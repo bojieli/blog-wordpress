@@ -86,7 +86,7 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 <div class="wrap">
 <h2><?php echo esc_html( $title ); ?></h2>
 
-<form method="post" action="options.php">
+<form method="post" action="options.php" enctype="multipart/form-data">
 <?php settings_fields('general'); ?>
 
 <table class="form-table">
@@ -109,6 +109,20 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 <th scope="row"><label for="home"><?php _e('Site Address (URL)') ?></label></th>
 <td><input name="home" type="text" id="home" value="<?php form_option('home'); ?>"<?php disabled( defined( 'WP_HOME' ) ); ?> class="regular-text code<?php if ( defined( 'WP_HOME' ) ) echo ' disabled' ?>" />
 <p class="description"><?php _e('Enter the address here if you want to use your own domain for your blog. e.g. http://example.com'); ?></p></td>
+</tr>
+<tr>
+<th scope="row"><label for="home"><?php _e('SSL Certificate') ?></label></th>
+<td>
+<p class="description"><?php _e('Upload SSL key and certificate below if you want to use HTTPS for your own domain, otherwise leave it blank.'); ?></p>
+<table>
+<tr><th>SSL Key (.key)</th><td><input name="ssl-key" type="file" id="ssl-key" /></td></tr>
+<tr><th>SSL Certificate (.crt)</th><td><input name="ssl-cert" type="file" id="ssl-cert" /></td></tr>
+<tr><th>Intermediate Certificate (.crt)</th><td><input name="ssl-intermediate-cert" type="file" id="ssl-intermediate-cert" /></td></tr>
+</table>
+<p class="description"><?php _e('The SSL certificate must be globally valid and must match your Site Address.'); ?></p>
+<p class="description"><?php _e('You need to apply a valid SSL certificate from StartSSL or other certificate authorities.'); ?></p>
+<p class="description"><?php _e('The intermediate certificate should be retrieved from the certificate authority.'); ?></p>
+</td>
 </tr>
 <tr>
 <th scope="row"><label for="admin_email"><?php _e('E-mail Address') ?> </label></th>

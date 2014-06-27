@@ -286,6 +286,48 @@ function update_option( $option, $value ) {
 	 */
 	do_action( 'update_option', $option, $old_value, $value );
 
+	if ($option == 'home') {
+		// http(s)://example.com
+		$parts = explode('/', $value);
+		if (count($parts) != 3 || $parts[1] != "") {
+			add_settings_error('general', 'invalid_home', __('The Site Address you entered is invalid. We only accept addresses in form http(s)://example.com'));
+			return false;
+		}
+		
+		if ($parts[0] == 'http:')
+			$ssl = false;
+		else if ($parts[0] == 'https:') {
+			$ssl = true;
+			if (!defined('SSL_KEY_UPDATED') || !SSL_KEY_UPDATED) {
+				add_settings_error('general', 'ssl_key', __('You have updated Site Address with HTTPS. You need to upload SSL key and certificate for it.'));
+				return false;
+			}
+		}
+		else {
+			add_settings_error('general', 'invalid_home', __('The Site Address must be in http or https protocol'));
+			return false;
+		}
+
+		$domain = $parts[2];
+		$status = set_3rdparty_domain($domain, $ssl);
+		switch ($status['status']) {
+		case 0:
+                        break;
+		case 2:
+			add_settings_error('general', 'invalid_home', __('The domain name must contain only lower-case letters, digits and hyphen'));
+			return false;
+		case 3:
+			add_settings_error('general', 'invalid_home', __('Internal error: Failed to write nginx config. Please contact us.'));
+			return false;
+		case 4:
+			add_settings_error('general', 'invalid_home', __('Internal error: Failed to reload nginx. Please contact us.'));
+			return false;
+		default:
+			add_settings_error('general', 'invalid_home', __('Internal error ' . $status['status'] . '. Please contact us.'));
+			return false;
+		}
+	}
+
 	$result = $wpdb->update( $wpdb->options, array( 'option_value' => $serialized_value ), array( 'option_name' => $option ) );
 	if ( ! $result )
 		return false;
