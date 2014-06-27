@@ -121,7 +121,8 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 </table>
 <p class="description"><?php _e('The SSL certificate must be globally valid and must match your Site Address.'); ?></p>
 <p class="description"><?php _e('You need to apply a valid SSL certificate from StartSSL or other certificate authorities.'); ?></p>
-<p class="description"><?php _e('The intermediate certificate should be retrieved from the certificate authority.'); ?></p>
+<p class="description"><?php _e('The SSL key must be in decrypted form. Some certificate issuers provide keys in encrypted form.'); ?></p>
+<p class="description"><?php _e('The intermediate certificate should be retrieved from the certificate issuer.'); ?></p>
 </td>
 </tr>
 <tr>
