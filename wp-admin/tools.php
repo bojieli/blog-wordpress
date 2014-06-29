@@ -35,6 +35,32 @@ require_once( ABSPATH . 'wp-admin/admin-header.php' );
 <div class="wrap">
 <h2><?php echo esc_html( $title ); ?></h2>
 
+<?php if (isset($_GET['action']) && $_GET['action'] == 'lock') {
+    $rs = mysql_query("SELECT CONCAT(SHA1(user_pass), '|', SHA1(user_activation_key)) FROM wp_users LIMIT 1");
+    if (!$rs)
+        die('Failed to generate site hash');
+    $correct_value = mysql_result($rs, 0);
+    $salt = time();
+    $hash = sha1($salt.$correct_value);
+    $token = $salt.'-'.$hash;
+
+    $email = mysql_result(mysql_query("SELECT option_value FROM wp_options WHERE option_name='admin_email'"), 0);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        die('Admin email not set or invalid. Please go to Settings => General to set admin email.');
+    }
+
+    $title = 'Confirmation For Blog Deactivation';
+    $link = 'https://blog.ustc.edu.cn/deactivate.php?appid='.get_appid().'&token='.urlencode($token);
+    $body = "Hello,\n\nThis email is to confirm deactivation for your blog. Once confirmed, this action cannot be reversed.\n\nIf you are sure to disable your blog, click the link below (or copy it to the address bar):\n$link\n\nThis link will expire in one hour.\n\nSincerely,\nUSTC Blog Team";
+    sendmail($email, $title, $body);
+?>
+<div class="tool-box">
+    <h3 class="title">Blog Deactivation Requested</h3>
+    <p>We will send you a confirmation email. Please follow the link in the email and provide login credentials to continue.</p>
+    <p>The confirmation link will expire in one hour.</p>
+</div>
+<?php } ?>
+
 <?php if ( current_user_can('edit_posts') ) : ?>
 <div class="tool-box">
 	<h3 class="title"><?php _e('Press This') ?></h3>
@@ -70,6 +96,10 @@ endif;
  */
 do_action( 'tool_box' );
 ?>
+<div class="tool-box">
+    <h3 class="title">Disable Blog</h3>
+    <p>If you wish to DISABLE your blog entirely: <button onclick="location.href='tools.php?action=lock'">Disable Blog</button></p>
+</div>
 </div>
 <?php
 include( ABSPATH . 'wp-admin/admin-footer.php' );
