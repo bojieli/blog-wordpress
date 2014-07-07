@@ -116,13 +116,13 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 <p class="description"><?php _e('Upload SSL key and certificate below if you want to use HTTPS for your own domain, otherwise leave it blank.'); ?></p>
 <table>
 <tr><th>SSL Key (.key)</th><td><input name="ssl-key" type="file" id="ssl-key" /></td></tr>
-<tr><th>SSL Certificate (.crt)</th><td><input name="ssl-cert" type="file" id="ssl-cert" /></td></tr>
-<tr><th>Intermediate Certificate (.crt)</th><td><input name="ssl-intermediate-cert" type="file" id="ssl-intermediate-cert" /></td></tr>
+<tr><th>SSL Certificate (.crt/.pem)</th><td><input name="ssl-cert" type="file" id="ssl-cert" /></td></tr>
+<tr><th>Intermediate Certificate (.crt/.pem)</th><td><input name="ssl-intermediate-cert" type="file" id="ssl-intermediate-cert" /></td></tr>
 </table>
-<p class="description"><?php _e('The SSL certificate must be globally valid and must match your Site Address.'); ?></p>
+<p class="description"><?php _e('The SSL certificate must be in PEM format, must be globally valid and must match your Site Address.'); ?></p>
 <p class="description"><?php _e('You need to apply a valid SSL certificate from StartSSL or other certificate authorities.'); ?></p>
 <p class="description"><?php _e('The SSL key must be in decrypted form. Some certificate issuers provide keys in encrypted form.'); ?></p>
-<p class="description"><?php _e('The intermediate certificate should be retrieved from the certificate issuer.'); ?></p>
+<p class="description"><?php _e('The intermediate certificate should be retrieved from the certificate issuer (PEM format).'); ?></p>
 </td>
 </tr>
 <tr>
