@@ -2505,7 +2505,10 @@ function site_url( $path = '', $scheme = null ) {
 */
 function get_site_url( $blog_id = null, $path = '', $scheme = null ) {
 	if ( empty( $blog_id ) || !is_multisite() ) {
-		$url = get_option( 'siteurl' );
+		if (defined('WP_SITEURL'))
+			$url = WP_SITEURL;
+		else
+			$url = get_option( 'siteurl' );
 	} else {
 		switch_to_blog( $blog_id );
 		$url = get_option( 'siteurl' );
