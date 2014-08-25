@@ -597,13 +597,13 @@ function delete_transient( $transient ) {
 /**
  * Get the value of a transient.
  *
- * If the transient does not exist or does not have a value, then the return value
- * will be false.
+ * If the transient does not exist, does not have a value, or has expired,
+ * then the return value will be false.
  *
  * @since 2.8.0
  *
- * @param string $transient Transient name. Expected to not be SQL-escaped
- * @return mixed Value of transient
+ * @param string $transient Transient name. Expected to not be SQL-escaped.
+ * @return mixed Value of transient.
  */
 function get_transient( $transient ) {
 
@@ -666,9 +666,11 @@ function get_transient( $transient ) {
  *
  * @since 2.8.0
  *
- * @param string $transient Transient name. Expected to not be SQL-escaped.
- * @param mixed $value Transient value. Must be serializable if non-scalar. Expected to not be SQL-escaped.
- * @param int $expiration Time until expiration in seconds, default 0
+ * @param string $transient  Transient name. Expected to not be SQL-escaped. Must be
+ *                           45 characters or fewer in length.
+ * @param mixed  $value      Transient value. Must be serializable if non-scalar.
+ *                           Expected to not be SQL-escaped.
+ * @param int    $expiration Optional. Time until expiration in seconds. Default 0.
  * @return bool False if value was not set and true if value was set.
  */
 function set_transient( $transient, $value, $expiration = 0 ) {
@@ -757,17 +759,17 @@ function set_transient( $transient, $value, $expiration = 0 ) {
  */
 function wp_user_settings() {
 
-	if ( ! is_admin() )
+	if ( ! is_admin() || defined( 'DOING_AJAX' ) ) {
 		return;
+	}
 
-	if ( defined('DOING_AJAX') )
+	if ( ! $user_id = get_current_user_id() ) {
 		return;
+	}
 
-	if ( ! $user_id = get_current_user_id() )
+	if ( is_super_admin() && ! is_user_member_of_blog() ) {
 		return;
-
-	if ( is_super_admin() && ! is_user_member_of_blog() )
-		return;
+	}
 
 	$settings = (string) get_user_option( 'user-settings', $user_id );
 
@@ -790,8 +792,9 @@ function wp_user_settings() {
 	}
 
 	// The cookie is not set in the current browser or the saved value is newer.
-	setcookie( 'wp-settings-' . $user_id, $settings, time() + YEAR_IN_SECONDS, SITECOOKIEPATH );
-	setcookie( 'wp-settings-time-' . $user_id, time(), time() + YEAR_IN_SECONDS, SITECOOKIEPATH );
+	$secure = ( 'https' === parse_url( site_url(), PHP_URL_SCHEME ) );
+	setcookie( 'wp-settings-' . $user_id, $settings, time() + YEAR_IN_SECONDS, SITECOOKIEPATH, null, $secure );
+	setcookie( 'wp-settings-time-' . $user_id, time(), time() + YEAR_IN_SECONDS, SITECOOKIEPATH, null, $secure );
 	$_COOKIE['wp-settings-' . $user_id] = $settings;
 }
 
@@ -824,8 +827,9 @@ function get_user_setting( $name, $default = false ) {
  */
 function set_user_setting( $name, $value ) {
 
-	if ( headers_sent() )
+	if ( headers_sent() ) {
 		return false;
+	}
 
 	$all_user_settings = get_all_user_settings();
 	$all_user_settings[$name] = $value;
@@ -846,8 +850,9 @@ function set_user_setting( $name, $value ) {
  */
 function delete_user_setting( $names ) {
 
-	if ( headers_sent() )
+	if ( headers_sent() ) {
 		return false;
+	}
 
 	$all_user_settings = get_all_user_settings();
 	$names = (array) $names;
@@ -860,8 +865,9 @@ function delete_user_setting( $names ) {
 		}
 	}
 
-	if ( $deleted )
+	if ( $deleted ) {
 		return wp_set_all_user_settings( $all_user_settings );
+	}
 
 	return false;
 }
@@ -876,23 +882,28 @@ function delete_user_setting( $names ) {
 function get_all_user_settings() {
 	global $_updated_user_settings;
 
-	if ( ! $user_id = get_current_user_id() )
+	if ( ! $user_id = get_current_user_id() ) {
 		return array();
+	}
 
-	if ( isset( $_updated_user_settings ) && is_array( $_updated_user_settings ) )
+	if ( isset( $_updated_user_settings ) && is_array( $_updated_user_settings ) ) {
 		return $_updated_user_settings;
+	}
 
 	$user_settings = array();
+
 	if ( isset( $_COOKIE['wp-settings-' . $user_id] ) ) {
 		$cookie = preg_replace( '/[^A-Za-z0-9=&_]/', '', $_COOKIE['wp-settings-' . $user_id] );
 
-		if ( $cookie && strpos( $cookie, '=' ) ) // '=' cannot be 1st char
+		if ( strpos( $cookie, '=' ) ) { // '=' cannot be 1st char
 			parse_str( $cookie, $user_settings );
-
+		}
 	} else {
 		$option = get_user_option( 'user-settings', $user_id );
-		if ( $option && is_string($option) )
+
+		if ( $option && is_string( $option ) ) {
 			parse_str( $option, $user_settings );
+		}
 	}
 
 	$_updated_user_settings = $user_settings;
@@ -910,22 +921,25 @@ function get_all_user_settings() {
 function wp_set_all_user_settings( $user_settings ) {
 	global $_updated_user_settings;
 
-	if ( ! $user_id = get_current_user_id() )
+	if ( ! $user_id = get_current_user_id() ) {
 		return false;
+	}
 
-	if ( is_super_admin() && ! is_user_member_of_blog() )
+	if ( is_super_admin() && ! is_user_member_of_blog() ) {
 		return;
+	}
 
 	$settings = '';
 	foreach ( $user_settings as $name => $value ) {
 		$_name = preg_replace( '/[^A-Za-z0-9_]+/', '', $name );
 		$_value = preg_replace( '/[^A-Za-z0-9_]+/', '', $value );
 
-		if ( ! empty( $_name ) )
+		if ( ! empty( $_name ) ) {
 			$settings .= $_name . '=' . $_value . '&';
+		}
 	}
 
-	$settings = rtrim($settings, '&');
+	$settings = rtrim( $settings, '&' );
 	parse_str( $settings, $_updated_user_settings );
 
 	update_user_option( $user_id, 'user-settings', $settings, false );
@@ -940,11 +954,12 @@ function wp_set_all_user_settings( $user_settings ) {
  * @since 2.7.0
  */
 function delete_all_user_settings() {
-	if ( ! $user_id = get_current_user_id() )
+	if ( ! $user_id = get_current_user_id() ) {
 		return;
+	}
 
 	update_user_option( $user_id, 'user-settings', '', false );
-	setcookie('wp-settings-' . $user_id, ' ', time() - YEAR_IN_SECONDS, SITECOOKIEPATH);
+	setcookie( 'wp-settings-' . $user_id, ' ', time() - YEAR_IN_SECONDS, SITECOOKIEPATH );
 }
 
 /**
@@ -1333,15 +1348,15 @@ function delete_site_transient( $transient ) {
 /**
  * Get the value of a site transient.
  *
- * If the transient does not exist or does not have a value, then the return value
- * will be false.
+ * If the transient does not exist, does not have a value, or has expired,
+ * then the return value will be false.
  *
  * @since 2.9.0
  *
  * @see get_transient()
  *
  * @param string $transient Transient name. Expected to not be SQL-escaped.
- * @return mixed Value of transient
+ * @return mixed Value of transient.
  */
 function get_site_transient( $transient ) {
 
@@ -1406,9 +1421,10 @@ function get_site_transient( $transient ) {
  *
  * @see set_transient()
  *
- * @param string $transient Transient name. Expected to not be SQL-escaped.
- * @param mixed $value Transient value. Expected to not be SQL-escaped.
- * @param int $expiration Time until expiration in seconds, default 0
+ * @param string $transient  Transient name. Expected to not be SQL-escaped. Must be
+ *                           40 characters or fewer in length.
+ * @param mixed  $value      Transient value. Expected to not be SQL-escaped.
+ * @param int    $expiration Optional. Time until expiration in seconds. Default 0.
  * @return bool False if value was not set and true if value was set.
  */
 function set_site_transient( $transient, $value, $expiration = 0 ) {
