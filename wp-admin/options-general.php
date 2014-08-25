@@ -103,12 +103,12 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 <tr>
 <th scope="row"><label for="siteurl"><?php _e('WordPress Address (URL)') ?></label></th>
 <td><input name="siteurl" type="text" id="siteurl" value="<?php form_option('siteurl'); ?>"<?php disabled( defined( 'WP_SITEURL' ) ); ?> class="regular-text code<?php if ( defined( 'WP_SITEURL' ) ) echo ' disabled' ?>" />
-<p class="description"><?php _e('This address could not be changed.'); ?></p></td>
+<p class="description"><?php _e('This is where you login to this dashboard.'); ?></p></td>
 </tr>
 <tr>
 <th scope="row"><label for="home"><?php _e('Site Address (URL)') ?></label></th>
 <td><input name="home" type="text" id="home" value="<?php form_option('home'); ?>"<?php disabled( defined( 'WP_HOME' ) ); ?> class="regular-text code<?php if ( defined( 'WP_HOME' ) ) echo ' disabled' ?>" />
-<p class="description"><?php _e('Enter the address here if you want to use your own domain for your blog. e.g. http://example.com'); ?></p></td>
+<p class="description"><?php _e('This is where your blog appears to the world. If you want to use your own domain, enter it here, e.g. http://example.com'); ?></p></td>
 </tr>
 <tr>
 <th scope="row"><label for="home"><?php _e('SSL Certificate') ?></label></th>
