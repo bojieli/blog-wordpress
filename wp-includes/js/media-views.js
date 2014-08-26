@@ -462,6 +462,7 @@
 				mode = this.get('menu'),
 				view;
 
+			this.frame.$el.toggleClass( 'hide-menu', ! mode );
 			if ( ! mode ) {
 				return;
 			}
@@ -791,7 +792,7 @@
 			title:    l10n.imageDetailsTitle,
 			// Initial region modes.
 			content:  'image-details',
-			menu:     'image-details',
+			menu:     false,
 			router:   false,
 			toolbar:  'image-details',
 
@@ -1244,6 +1245,7 @@
 			filterable:    'uploaded',
 			// Region mode defaults.
 			toolbar:       'replace',
+			menu:          false,
 
 			priority:      60,
 			syncSelection: true
@@ -1776,12 +1778,6 @@
 			this.activeModes.add( [ { id: mode } ] );
 			// Add a CSS class to the frame so elements can be styled for the mode.
 			this.$el.addClass( 'mode-' + mode );
-			/**
-			 * Frame mode activation event.
-			 *
-			 * @event this#{mode}:activate
-			 */
-			this.trigger( mode + ':activate' );
 
 			return this;
 		},
@@ -2504,9 +2500,7 @@
 
 						// Keep focus inside media modal
 						// after canceling a gallery
-						new media.view.FocusManager({
-							el: this.el
-						}).focus();
+						this.controller.modal.focusManager.focus();
 					}
 				},
 				separateCancel: new media.View({
@@ -2695,9 +2689,7 @@
 
 					// Keep focus inside media modal
 					// after jumping to gallery view
-					new media.view.FocusManager({
-						el: this.el
-					}).focus();
+					this.controller.modal.focusManager.focus();
 				}
 			});
 		},
@@ -2727,9 +2719,7 @@
 
 					// Keep focus inside media modal
 					// after jumping to playlist view
-					new media.view.FocusManager({
-						el: this.el
-					}).focus();
+					this.controller.modal.focusManager.focus();
 				}
 			});
 		},
@@ -2759,9 +2749,7 @@
 
 					// Keep focus inside media modal
 					// after jumping to video playlist view
-					new media.view.FocusManager({
-						el: this.el
-					}).focus();
+					this.controller.modal.focusManager.focus();
 				}
 			});
 		},
@@ -2983,7 +2971,6 @@
 			this.on( 'menu:create:image-details', this.createMenu, this );
 			this.on( 'content:create:image-details', this.imageDetailsContent, this );
 			this.on( 'content:render:edit-image', this.editImageContent, this );
-			this.on( 'menu:render:image-details', this.renderMenu, this );
 			this.on( 'toolbar:render:image-details', this.renderImageDetailsToolbar, this );
 			// override the select toolbar
 			this.on( 'toolbar:render:replace', this.renderReplaceImageToolbar, this );
@@ -2993,8 +2980,7 @@
 			this.states.add([
 				new media.controller.ImageDetails({
 					image: this.image,
-					editable: false,
-					menu: 'image-details'
+					editable: false
 				}),
 				new media.controller.ReplaceImage({
 					id: 'replace-image',
@@ -3002,7 +2988,6 @@
 					image: this.image,
 					multiple:  false,
 					title:     l10n.imageReplaceTitle,
-					menu: 'image-details',
 					toolbar: 'replace',
 					priority:  80,
 					displaySettings: true
@@ -3037,31 +3022,6 @@
 
 			// after bringing in the frame, load the actual editor via an ajax call
 			view.loadEditor();
-
-		},
-
-		renderMenu: function( view ) {
-			var lastState = this.lastState(),
-				previous = lastState && lastState.id,
-				frame = this;
-
-			view.set({
-				cancel: {
-					text:     l10n.imageDetailsCancel,
-					priority: 20,
-					click:    function() {
-						if ( previous ) {
-							frame.setState( previous );
-						} else {
-							frame.close();
-						}
-					}
-				},
-				separateCancel: new media.View({
-					className: 'separator',
-					priority: 40
-				})
-			});
 
 		},
 
@@ -3259,7 +3219,7 @@
 				}
 			}
 
-			this.$( '.media-modal-close' ).focus();
+			this.$el.focus();
 
 			return this.propagate('open');
 		},
@@ -3357,42 +3317,37 @@
 	 * @augments Backbone.View
 	 */
 	media.view.FocusManager = media.View.extend({
+
 		events: {
-			keydown: 'recordTab',
-			focusin: 'updateIndex'
+			'keydown': 'constrainTabbing'
 		},
 
-		focus: function() {
-			// Reset focus on first left menu item
-			$('.media-menu-item').first().focus();
+		focus: function() { // Reset focus on first left menu item
+			this.$('.media-menu-item').first().focus();
 		},
 		/**
 		 * @param {Object} event
 		 */
-		recordTab: function( event ) {
+		constrainTabbing: function( event ) {
+			var tabbables;
+
 			// Look for the tab key.
 			if ( 9 !== event.keyCode ) {
 				return;
 			}
 
+			tabbables = this.$( ':tabbable' );
+
 			// Keep tab focus within media modal while it's open
-			if ( event.target === this.tabbableLast[0] && !event.shiftKey ) {
-				this.tabbableFirst.focus();
+			if ( tabbables.last()[0] === event.target && ! event.shiftKey ) {
+				tabbables.first().focus();
 				return false;
-			} else if ( event.target === this.tabbableFirst[0] && event.shiftKey ) {
-				this.tabbableLast.focus();
+			} else if ( tabbables.first()[0] === event.target && event.shiftKey ) {
+				tabbables.last().focus();
 				return false;
 			}
-		},
-		/**
-		 * @param {Object} event
-		 */
-		updateIndex: function() {
-			// Resets tabbable elements
-			this.tabbables = $( ':tabbable', this.$el );
-			this.tabbableFirst = this.tabbables.filter( ':first' );
-			this.tabbableLast = this.tabbables.filter( ':last' );
 		}
+
 	});
 
 	/**
@@ -4699,12 +4654,13 @@
 
 			if ( options.rerenderOnModelChange ) {
 				this.model.on( 'change', this.render, this );
+			} else {
+				this.model.on( 'change:percent', this.progress, this );
 			}
 			this.model.on( 'change:title', this._syncTitle, this );
 			this.model.on( 'change:caption', this._syncCaption, this );
 			this.model.on( 'change:artist', this._syncArtist, this );
 			this.model.on( 'change:album', this._syncAlbum, this );
-			this.model.on( 'change:percent', this.progress, this );
 
 			// Update the selection.
 			this.model.on( 'add', this.select, this );
@@ -4772,10 +4728,15 @@
 				options.allowLocalEdits = true;
 			}
 
+			if ( options.uploading && ! options.percent ) {
+				options.percent = 0;
+			}
+
 			this.views.detach();
 			this.$el.html( this.template( options ) );
 
 			this.$el.toggleClass( 'uploading', options.uploading );
+
 			if ( options.uploading ) {
 				this.$bar = this.$('.media-progress-bar div');
 			} else {
@@ -5762,12 +5723,12 @@
 			this.listenTo( this.controller, 'toggle:upload:attachment', _.bind( this.toggleUploader, this ) );
 
 			this.createToolbar();
-			this.createUploader();
-			this.createAttachments();
-			this.updateContent();
 			if ( this.options.sidebar ) {
 				this.createSidebar();
 			}
+			this.createUploader();
+			this.createAttachments();
+			this.updateContent();
 
 			if ( ! this.options.sidebar || 'errors' === this.options.sidebar ) {
 				this.$el.addClass( 'hide-sidebar' );
@@ -6171,9 +6132,7 @@
 
 			// Keep focus inside media modal
 			// after clear link is selected
-			new media.view.FocusManager({
-				el: this.el
-			}).focus();
+			this.controller.modal.focusManager.focus();
 		}
 	});
 
@@ -6526,9 +6485,7 @@
 				this.model.destroy();
 				// Keep focus inside media modal
 				// after image is deleted
-				new media.view.FocusManager({
-					el: this.el
-				}).focus();
+				this.controller.modal.focusManager.focus();
 			}
 		},
 		/**

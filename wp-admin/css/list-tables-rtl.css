@@ -1347,6 +1347,7 @@ div.action-links,
 	float: left;
 	clear: left;
 	width: 65%;
+	width: -webkit-calc( 100% - 180px );
 	width: calc( 100% - 180px );
 }
 
@@ -1381,6 +1382,15 @@ div.action-links,
 	height: 128px;
 	float: right;
 	margin: 0 0 20px 20px;
+}
+
+.no-plugin-results {
+	color: #999;
+	font-size: 18px;
+	font-style: normal;
+	margin: 0;
+	padding: 100px 0 0;
+	text-align: center;
 }
 
 /* ms */
