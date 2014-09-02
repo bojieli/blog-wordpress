@@ -255,6 +255,14 @@ if ( 'update' == $action ) {
 			}
 			update_option( $option, $value );
 		}
+
+		// Switch translation in case WPLANG was changed.
+		$language = get_option( 'WPLANG' );
+		if ( $language ) {
+			load_default_textdomain( $language );
+		} else {
+			unload_textdomain( 'default' );
+		}
 	}
 
 	/**

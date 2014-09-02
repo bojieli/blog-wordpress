@@ -64,13 +64,17 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 			$tabs['search']	= __( 'Search Results' );
 		$tabs['featured']  = _x( 'Featured', 'Plugin Installer' );
 		$tabs['popular']   = _x( 'Popular', 'Plugin Installer' );
-		$tabs['new']       = _x( 'Newest', 'Plugin Installer' );
 		$tabs['favorites'] = _x( 'Favorites', 'Plugin Installer' );
 		if ( $tab === 'beta' || false !== strpos( $GLOBALS['wp_version'], '-' ) ) {
 			$tabs['beta']      = _x( 'Beta Testing', 'Plugin Installer' );
 		}
+		if ( current_user_can( 'upload_plugins' ) ) {
+			// No longer a real tab. Here for filter compatibility.
+			// Gets skipped in get_views().
+			$tabs['upload'] = __( 'Upload Plugin' );
+		}
 
-		$nonmenu_tabs = array( 'upload', 'plugin-information' ); //Valid actions to perform which do not have a Menu item.
+		$nonmenu_tabs = array( 'plugin-information' ); // Valid actions to perform which do not have a Menu item.
 
 		/**
 		 * Filter the tabs shown on the Plugin Install screen.
@@ -175,7 +179,7 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 		$this->items = $api->plugins;
 
 		if ( $this->orderby ) {
-			uasort( $this->items, array( $this, '_order_callback' ) );
+			uasort( $this->items, array( $this, 'order_callback' ) );
 		}
 
 		$this->set_pagination_args( array(
@@ -206,6 +210,8 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 			$href = self_admin_url('plugin-install.php?tab=' . $action);
 			$display_tabs['plugin-install-'.$action] = "<a href='$href' class='$class'>$text</a>";
 		}
+		// No longer a real tab.
+		unset( $display_tabs['plugin-install-upload'] );
 
 		return $display_tabs;
 	}
@@ -263,6 +269,10 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 	}
 
 	protected function display_tablenav( $which ) {
+		if ( $GLOBALS['tab'] === 'featured' ) {
+			return;
+		}
+
 		if ( 'top' ==  $which ) { ?>
 			<div class="tablenav top">
 				<div class="alignleft actions">
@@ -294,7 +304,7 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 		return array();
 	}
 
-	public function _order_callback( $plugin_a, $plugin_b ) {
+	private function order_callback( $plugin_a, $plugin_b ) {
 		$orderby = $this->orderby;
 		if ( ! isset( $plugin_a->$orderby, $plugin_b->$orderby ) ) {
 			return 0;

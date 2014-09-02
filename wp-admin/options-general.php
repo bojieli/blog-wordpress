@@ -318,7 +318,9 @@ endfor;
 </select></td>
 </tr>
 <?php do_settings_fields('general', 'default'); ?>
+
 <?php
+<<<<<<< HEAD
 	function show_language_option($lang, $description) {
 		echo '<option value="'.$lang.'"';
 		$curr_lang = (get_option('WPLANG') ? get_option('WPLANG') : WPLANG);
@@ -330,7 +332,7 @@ endfor;
 	if ( $languages ) :
 ?>
 	<tr>
-		<th width="33%" scope="row"><label for="WPLANG"><?php _e('Site Language') ?></label></th>
+		<th width="33%" scope="row"><label for="WPLANG"><?php _e( 'Site Language' ); ?></label></th>
 		<td>
 			<select name="WPLANG" id="WPLANG">
 				<?php echo show_language_option('zh_CN', 'Chinese (Simplified)') ?>
@@ -339,8 +341,8 @@ endfor;
 			</select>
 		</td>
 	</tr>
-<?php
-	endif;
+	<?php
+}
 ?>
 </table>
 
