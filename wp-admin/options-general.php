@@ -320,7 +320,6 @@ endfor;
 <?php do_settings_fields('general', 'default'); ?>
 
 <?php
-<<<<<<< HEAD
 	function show_language_option($lang, $description) {
 		echo '<option value="'.$lang.'"';
 		$curr_lang = (get_option('WPLANG') ? get_option('WPLANG') : WPLANG);
@@ -341,8 +340,8 @@ endfor;
 			</select>
 		</td>
 	</tr>
-	<?php
-}
+<?php
+    endif;
 ?>
 </table>
 
