@@ -318,19 +318,24 @@ endfor;
 </select></td>
 </tr>
 <?php do_settings_fields('general', 'default'); ?>
+
 <?php
-	function show_language_option($lang, $description) {
-		echo '<option value="'.$lang.'"';
-		$curr_lang = (get_option('WPLANG') ? get_option('WPLANG') : WPLANG);
-		if ($lang == $curr_lang)
-			echo ' selected="selected"';
-		echo '>'.$description.'</option>';
-	}
-	$languages = get_available_languages();
-	if ( $languages ) :
+function show_language_option($lang, $description) {
+	echo '<option value="'.$lang.'"';
+	$curr_lang = (get_option('WPLANG') ? get_option('WPLANG') : WPLANG);
+	if ($lang == $curr_lang)
+		echo ' selected="selected"';
+	echo '>'.$description.'</option>';
+}
+$languages = get_available_languages();
+$languages[] = "en_US";
+if ( ! is_multisite() && defined( 'WPLANG' ) && '' !== WPLANG && 'en_US' !== WPLANG && ! in_array( WPLANG, $languages ) ) {
+	$languages[] = WPLANG;
+}
+if ( $languages ) :
 ?>
 	<tr>
-		<th width="33%" scope="row"><label for="WPLANG"><?php _e('Site Language') ?></label></th>
+		<th width="33%" scope="row"><label for="WPLANG"><?php _e( 'Site Language' ); ?></label></th>
 		<td>
 			<select name="WPLANG" id="WPLANG">
 				<?php echo show_language_option('zh_CN', 'Chinese (Simplified)') ?>
@@ -339,8 +344,8 @@ endfor;
 			</select>
 		</td>
 	</tr>
-<?php
-	endif;
+	<?php
+}
 ?>
 </table>
 

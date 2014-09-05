@@ -1399,7 +1399,7 @@ function wp_playlist_shortcode( $attr ) {
 	}
 	?></ol>
 	</noscript>
-	<script type="application/json"><?php echo json_encode( $data ) ?></script>
+	<script type="application/json" class="wp-playlist-script"><?php echo json_encode( $data ) ?></script>
 </div>
 	<?php
 	return ob_get_clean();
@@ -3020,7 +3020,7 @@ function wp_enqueue_media( $args = array() ) {
 
  		// Media Library
  		'editMetadata' => __( 'Edit Metadata' ),
- 		'noMedia'      => __( 'No media found. Try a different search.' ),
+ 		'noMedia'      => __( 'No media attachments found.' ),
 	);
 
 	/**
@@ -3045,9 +3045,11 @@ function wp_enqueue_media( $args = array() ) {
 
 	$strings['settings'] = $settings;
 
+	// Ensure we enqueue media-editor first, that way media-views is
+	// registered internally before we try to localize it. see #24724.
+	wp_enqueue_script( 'media-editor' );
 	wp_localize_script( 'media-views', '_wpMediaViewsL10n', $strings );
 
-	wp_enqueue_script( 'media-editor' );
 	wp_enqueue_script( 'media-audiovideo' );
 	wp_enqueue_style( 'media-views' );
 	if ( is_admin() ) {

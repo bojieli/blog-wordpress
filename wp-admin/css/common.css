@@ -1022,6 +1022,7 @@ th.action-links {
 }
 
 .wp-filter .search-form input[type="search"] {
+	margin: 0;
 	padding: 3px 5px;
 	width: 280px;
 	font-size: 16px;
@@ -2137,6 +2138,7 @@ div.action-links {
 	font-size: 22px;
 	font-weight: 600;
 	line-height: 56px;
+	position: relative;
 	top: 0;
 	right: 0;
 	left: 0;
@@ -2377,6 +2379,12 @@ div.action-links {
 	background: #f3f3f3;
 }
 
+/* @noflip */
+#plugin-information .section {
+	direction: ltr;
+}
+
+/* @noflip */
 #plugin-information .section ul,
 #plugin-information .section ol {
 	list-style-type: disc;
@@ -2404,6 +2412,7 @@ div.action-links {
 	box-shadow: 0 1px 2px rgba( 0, 0, 0, 0.3 );
 }
 
+/* @noflip */
 #plugin-information #section-screenshots li p {
 	font-style: italic;
 	padding-left: 20px;
@@ -2415,19 +2424,19 @@ div.action-links {
 	border: 1px solid #ccc;
 }
 
+/* @noflip */
 #plugin-information .review {
+	overflow: hidden; /* clearfix */
 	width: 100%;
-	float: left;
 	margin-bottom: 20px;
 	border-bottom: 1px solid #e6e6e6;
 }
 
 #plugin-information .review-title-section {
-	display: block;
-	width: 100%;
-	clear: both;
+	overflow: hidden; /* clearfix */
 }
 
+/* @noflip */
 #plugin-information .review-title-section h4 {
 	display: inline-block;
 	float: left;
@@ -2435,27 +2444,29 @@ div.action-links {
 }
 
 #plugin-information .reviewer-info p {
-	display: block;
-	width: 100%;
 	clear: both;
 	margin: 0;
 	padding-top: 2px;
 }
 
+/* @noflip */
 #plugin-information .reviewer-info .avatar {
 	float: left;
 	margin: 4px 6px 0 0;
 }
 
-#plugin-information .star-rating {
+/* @noflip */
+#plugin-information .reviewer-info .star-rating {
 	float: left;
 }
 
+/* @noflip */
 #plugin-information .review-meta {
 	float: left;
 	margin-left: 0.75em;
 }
 
+/* @noflip */
 #plugin-information .review-body {
 	float: left;
 	width: 100%;
@@ -2568,6 +2579,7 @@ body.import-php .tb-close-icon,
 body.plugins-php .tb-close-icon,
 body.update-core-php .tb-close-icon,
 body.index-php .tb-close-icon {
+	left: auto;
 	right: -30px;
 	color: #eee;
 	-webkit-transition: color .1s ease-in-out, background .1s ease-in-out;

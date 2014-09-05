@@ -748,7 +748,6 @@
  */
 .attachments {
 	margin: 0;
-	padding: 8px;
 	-webkit-overflow-scrolling: touch;
 }
 
@@ -1036,6 +1035,10 @@
 .attachments-browser .media-toolbar-secondary > .media-button,
 .attachments-browser .media-toolbar-secondary > .media-button-group {
 	margin: 11px 0;
+}
+
+.attachments-browser .attachments {
+	padding: 2px 8px 8px;
 }
 
 .attachments-browser .attachments,
@@ -1682,6 +1685,7 @@
 	margin-bottom: 16px;
 	padding: 0;
 	padding-bottom: 16px;
+	position: relative; /* RTL fix, #WP29352 */
 }
 
 .media-modal .imgedit-group:last-of-type {
@@ -2146,19 +2150,19 @@
 @media only screen and (max-width: 900px) {
 
 	/* Drop-down menu */
-	.media-frame .media-frame-title,
-	.media-frame .media-frame-router,
-	.media-frame .media-frame-content,
-	.media-frame .media-frame-toolbar {
+	.media-frame:not(.hide-menu) .media-frame-title,
+	.media-frame:not(.hide-menu) .media-frame-router,
+	.media-frame:not(.hide-menu) .media-frame-content,
+	.media-frame:not(.hide-menu) .media-frame-toolbar {
 		left: 0;
 	}
 
-	.media-frame .media-frame-menu {
+	.media-frame:not(.hide-menu) .media-frame-menu {
 		position: static;
 		width: 0;
 	}
 
-	.media-frame .media-menu {
+	.media-frame:not(.hide-menu) .media-menu {
 		width: auto;
 		max-width: 80%;
 		overflow: auto;
@@ -2171,34 +2175,34 @@
 		border: 1px solid #ccc;
 	}
 
-	.media-frame .media-menu.visible {
+	.media-frame:not(.hide-menu) .media-menu.visible {
 		left: 0;
 	}
 
-	.media-frame .media-menu > a {
+	.media-frame:not(.hide-menu) .media-menu > a {
 		padding: 12px 16px;
 		font-size: 16px;
 	}
 
-	.media-frame .media-menu > a.active {
+	.media-frame:not(.hide-menu) .media-menu > a.active {
 		display: none;
 	}
 
-	.media-frame .media-menu .separator {
+	.media-frame:not(.hide-menu) .media-menu .separator {
 		margin: 5px 10px;
 	}
 
-	.media-frame .media-frame-title {
+	.media-frame:not(.hide-menu) .media-frame-title {
 		left: 0;
 		color: #21759b;
 	}
 
-	.media-frame .media-frame-title .dashicons {
+	.media-frame:not(.hide-menu) .media-frame-title .dashicons {
 		display: inline-block;
 		line-height: 50px;
 	}
 
-	.media-frame .media-frame-title h1 {
+	.media-frame:not(.hide-menu) .media-frame-title h1 {
 		line-height: 3;
 		font-size: 18px;
 		float: left;
@@ -2457,6 +2461,38 @@
 	.media-frame-content .media-toolbar .attachment-filters {
 		max-width: 90px;
 	}
+
+	.media-modal-close {
+		top: 5px;
+		right: 5px;
+	}
+
+	.media-modal .media-frame-title {
+		height: 40px;
+	}
+
+	.media-modal .media-frame-title h1,
+	.media-frame:not(.hide-menu) .media-frame-title h1 {
+		font-size: 18px;
+		line-height: 40px;
+	}
+
+	.media-frame:not(.hide-menu) .media-frame-title .dashicons {
+		line-height: 40px;
+	}
+
+	.media-frame-router,
+	.media-frame:not(.hide-menu) .media-menu {
+		top: 40px;
+	}
+
+	.media-frame-content {
+		top: 74px;
+	}
+
+	.media-frame.hide-router .media-frame-content {
+		top: 40px;
+	}
 }
 
 /**
@@ -2478,50 +2514,50 @@
 	}
 }
 
-.attachments[data-columns="1"] .attachment {
+.media-frame-content[data-columns="1"] .attachment {
 	width: 100%;
 }
 
-.attachments[data-columns="2"] .attachment {
+.media-frame-content[data-columns="2"] .attachment {
 	width: 50%;
 }
 
-.attachments[data-columns="3"] .attachment {
-	width: 33.3%;
+.media-frame-content[data-columns="3"] .attachment {
+	width: 33.33%;
 }
 
-.attachments[data-columns="4"] .attachment {
+.media-frame-content[data-columns="4"] .attachment {
 	width: 25%;
 }
 
-.attachments[data-columns="5"] .attachment {
+.media-frame-content[data-columns="5"] .attachment {
 	width: 20%;
 }
 
-.attachments[data-columns="6"] .attachment {
-	width: 16.6%;
+.media-frame-content[data-columns="6"] .attachment {
+	width: 16.66%;
 }
 
-.attachments[data-columns="7"] .attachment {
-	width: 14.2%;
+.media-frame-content[data-columns="7"] .attachment {
+	width: 14.28%;
 }
 
-.attachments[data-columns="8"] .attachment {
+.media-frame-content[data-columns="8"] .attachment {
 	width: 12.5%;
 }
 
-.attachments[data-columns="9"] .attachment {
-	width: 11.1%;
+.media-frame-content[data-columns="9"] .attachment {
+	width: 11.11%;
 }
 
-.attachments[data-columns="10"] .attachment {
+.media-frame-content[data-columns="10"] .attachment {
 	width: 10%;
 }
 
-.attachments[data-columns="11"] .attachment {
-	width: 9%;
+.media-frame-content[data-columns="11"] .attachment {
+	width: 9.09%;
 }
 
-.attachments[data-columns="12"] .attachment {
-	width: 8.3%;
+.media-frame-content[data-columns="12"] .attachment {
+	width: 8.33%;
 }

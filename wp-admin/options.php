@@ -226,7 +226,7 @@ if ( 'update' == $action ) {
 		}
 	}
 
-	// Handle custom date/time formats
+	// Handle custom date/time formats.
 	if ( 'general' == $option_page ) {
 		if ( !empty($_POST['date_format']) && isset($_POST['date_format_custom']) && '\c\u\s\t\o\m' == wp_unslash( $_POST['date_format'] ) )
 			$_POST['date_format'] = $_POST['date_format_custom'];
@@ -254,6 +254,14 @@ if ( 'update' == $action ) {
 				$value = wp_unslash( $value );
 			}
 			update_option( $option, $value );
+		}
+
+		// Switch translation in case WPLANG was changed.
+		$language = get_option( 'WPLANG' );
+		if ( $language ) {
+			load_default_textdomain( $language );
+		} else {
+			unload_textdomain( 'default' );
 		}
 	}
 

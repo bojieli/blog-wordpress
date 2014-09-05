@@ -3923,7 +3923,7 @@
 			// The toolbar is composed of two `PriorityList` views.
 			this.primary   = new media.view.PriorityList();
 			this.secondary = new media.view.PriorityList();
-			this.primary.$el.addClass('media-toolbar-primary');
+			this.primary.$el.addClass('media-toolbar-primary search-form');
 			this.secondary.$el.addClass('media-toolbar-secondary');
 
 			this.views.set([ this.secondary, this.primary ]);
@@ -5199,6 +5199,8 @@
 			});
 
 			this._viewsByCid = {};
+			this.$window = $( window );
+			this.resizeEvent = 'resize.media-modal-columns';
 
 			this.collection.on( 'add', function( attachment ) {
 				this.views.add( this.createAttachmentView( attachment ), {
@@ -5230,13 +5232,17 @@
 			_.bindAll( this, 'setColumns' );
 
 			if ( this.options.resize ) {
-				$( window ).on( 'resize.media-modal-columns', this.setColumns );
+				this.on( 'ready', this.bindEvents );
 				this.controller.on( 'open', this.setColumns );
-			}
 
-			// Call this.setColumns() after this view has been rendered in the DOM so
-			// attachments get proper width applied.
-			_.defer( this.setColumns, this );
+				// Call this.setColumns() after this view has been rendered in the DOM so
+				// attachments get proper width applied.
+				_.defer( this.setColumns, this );
+			}
+		},
+
+		bindEvents: function() {
+			this.$window.off( this.resizeEvent ).on( this.resizeEvent, _.debounce( this.setColumns, 50 ) );
 		},
 
 		attachmentFocus: function() {
@@ -5249,7 +5255,7 @@
 
 		arrowEvent: function( event ) {
 			var attachments = this.$el.children( 'li' ),
-				perRow = this.$el.data( 'columns' ),
+				perRow = this.columns,
 				index = attachments.filter( ':focus' ).index(),
 				row = ( index + 1 ) <= perRow ? 1 : Math.ceil( ( index + 1 ) / perRow );
 
@@ -5292,7 +5298,9 @@
 
 		dispose: function() {
 			this.collection.props.off( null, null, this );
-			$( window ).off( 'resize.media-modal-columns' );
+			if ( this.options.resize ) {
+				this.$window.off( this.resizeEvent );
+			}
 
 			/**
 			 * call 'dispose' directly on the parent class
@@ -5308,7 +5316,7 @@
 				this.columns = Math.min( Math.round( width / this.options.idealColumnWidth ), 12 ) || 1;
 
 				if ( ! prev || prev !== this.columns ) {
-					this.$el.attr( 'data-columns', this.columns );
+					this.$el.closest( '.media-frame-content' ).attr( 'data-columns', this.columns );
 				}
 			}
 		},
@@ -5750,14 +5758,20 @@
 		},
 
 		createToolbar: function() {
-			var LibraryViewSwitcher, Filters;
+			var LibraryViewSwitcher, Filters, toolbarOptions;
+
+			toolbarOptions = {
+				controller: this.controller
+			};
+
+			if ( this.controller.isModeActive( 'grid' ) ) {
+				toolbarOptions.className = 'media-toolbar wp-filter';
+			}
 
 			/**
-			 * @member {wp.media.view.Toolbar}
-			 */
-			this.toolbar = new media.view.Toolbar({
-				controller: this.controller
-			});
+			* @member {wp.media.view.Toolbar}
+			*/
+			this.toolbar = new media.view.Toolbar( toolbarOptions );
 
 			this.views.add( this.toolbar );
 
@@ -6757,7 +6771,7 @@
 		initialize: function() {
 			var self = this;
 
-			this.$input = $('<input id="embed-url-field" type="text" />').val( this.model.get('url') );
+			this.$input = $('<input id="embed-url-field" type="url" />').val( this.model.get('url') );
 			this.input = this.$input[0];
 
 			this.spinner = $('<span class="spinner" />')[0];
@@ -6860,7 +6874,9 @@
 			} ).done( _.bind( this.renderoEmbed, this ) );
 		},
 
-		renderoEmbed: function(html) {
+		renderoEmbed: function( response ) {
+			var html = ( response && response.body ) || '';
+
 			this.spinner.hide();
 
 			this.$('.setting.title').hide();
