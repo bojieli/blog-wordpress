@@ -15,6 +15,10 @@
  *
  * @since 1.0.0
  */
+
+// disable core update fixed by zsj
+define( 'WP_AUTO_UPDATE_CORE', false );
+
 define( 'WPINC', 'wp-includes' );
 
 // Include files required for initialization.

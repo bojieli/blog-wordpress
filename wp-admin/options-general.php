@@ -344,8 +344,8 @@ if ( $languages ) :
 			</select>
 		</td>
 	</tr>
-	<?php
-}
+<?php
+    endif;
 ?>
 </table>
 

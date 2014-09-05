@@ -56,11 +56,6 @@ function get_locale() {
 		if ( $ms_locale !== false ) {
 			$locale = $ms_locale;
 		}
-	} else {
-		$db_locale = get_option( 'WPLANG' );
-		if ( $db_locale !== false ) {
-			$locale = $db_locale;
-		}
 	}
 	else { // allow personalize locale in wordpress option
 		$db_locale = get_option('WPLANG');
