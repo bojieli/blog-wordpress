@@ -37,6 +37,8 @@ if (!defined('WPLANG'))
     define('WPLANG', 'zh_CN');
 if (!defined('WP_DEBUG'))
     define('WP_DEBUG', false);
+/* Wordpress core is shared among USTC Blog users and cannot be updated */
+define('WP_AUTO_UPDATE_CORE', false);
 
 if (!defined('WP_SITEURL'))
     define('WP_SITEURL', ($_SERVER['REQUEST_SCHEME'] == "https" ? "https" : "http")."://".$_SERVER['HTTP_HOST']);
