@@ -22,6 +22,11 @@ class WP_Media_List_Table extends WP_List_Table {
 	public function __construct( $args = array() ) {
 		$this->detached = ( isset( $_REQUEST['attachment-filter'] ) && 'detached' === $_REQUEST['attachment-filter'] );
 
+		$this->modes = array(
+			'list' => __( 'List View' ),
+			'grid' => __( 'Grid View' )
+		);
+
 		parent::__construct( array(
 			'plural' => 'media',
 			'screen' => isset( $args['screen'] ) ? $args['screen'] : null,
@@ -70,7 +75,7 @@ class WP_Media_List_Table extends WP_List_Table {
 			if ( !empty( $_GET['attachment-filter'] ) && strpos( $_GET['attachment-filter'], 'post_mime_type:' ) === 0 && wp_match_mime_types( $mime_type, str_replace( 'post_mime_type:', '', $_GET['attachment-filter'] ) ) )
 				$selected = ' selected="selected"';
 			if ( !empty( $num_posts[$mime_type] ) )
-				$type_links[$mime_type] = '<option value="post_mime_type:' . urlencode( $mime_type ) . '"' . $selected . '>' . sprintf( translate_nooped_plural( $label[2], $num_posts[$mime_type] ), number_format_i18n( $num_posts[$mime_type] )) . '</option>';
+				$type_links[$mime_type] = '<option value="post_mime_type:' . sanitize_mime_type( $mime_type ) . '"' . $selected . '>' . sprintf( translate_nooped_plural( $label[2], $num_posts[$mime_type] ), number_format_i18n( $num_posts[$mime_type] )) . '</option>';
 		}
 		$type_links['detached'] = '<option value="detached"' . ( $this->detached ? ' selected="selected"' : '' ) . '>' . sprintf( _nx( 'Unattached (%s)', 'Unattached (%s)', $total_orphans, 'detached files' ), number_format_i18n( $total_orphans ) ) . '</option>';
 
@@ -82,13 +87,26 @@ class WP_Media_List_Table extends WP_List_Table {
 
 	protected function get_bulk_actions() {
 		$actions = array();
-		$actions['delete'] = __( 'Delete Permanently' );
+		if ( MEDIA_TRASH ) {
+			if ( $this->is_trash ) {
+				$actions['untrash'] = __( 'Restore' );
+				$actions['delete'] = __( 'Delete Permanently' );
+			} else {
+				$actions['trash'] = __( 'Trash' );
+			}
+		} else {
+			$actions['delete'] = __( 'Delete Permanently' );
+		}
+
 		if ( $this->detached )
 			$actions['attach'] = __( 'Attach to a post' );
 
 		return $actions;
 	}
 
+	/**
+	 * @param string $which
+	 */
 	protected function extra_tablenav( $which ) {
 		if ( 'bar' !== $which ) {
 			return;
@@ -131,42 +149,11 @@ class WP_Media_List_Table extends WP_List_Table {
 		_e( 'No media attachments found.' );
 	}
 
-	protected function pagination( $which ) {
-		global $mode;
-
-		parent::pagination( $which );
-	}
-
 	/**
-	 * Display a view switcher
-	 *
-	 * @since 3.1.0
-	 * @access protected
+	 * @param string $which
 	 */
-	protected function view_switcher( $current_mode ) {
-		$modes = array(
-			'list'    => __( 'List View' ),
-			'grid' => __( 'Grid View' )
-		);
-
-?>
-		<input type="hidden" name="mode" value="<?php echo esc_attr( $current_mode ); ?>" />
-		<div class="view-switch">
-<?php
-			foreach ( $modes as $mode => $title ) {
-				$classes = array( 'view-' . $mode );
-				if ( $current_mode == $mode )
-					$classes[] = 'current';
-				printf(
-					"<a href='%s' class='%s' id='view-switch-$mode'><span class='screen-reader-text'>%s</span></a>\n",
-					esc_url( add_query_arg( 'mode', $mode ) ),
-					implode( ' ', $classes ),
-					$title
-				);
-			}
-		?>
-		</div>
-<?php
+	protected function pagination( $which ) {
+		parent::pagination( $which );
 	}
 
 	/**
@@ -510,6 +497,10 @@ foreach ( $columns as $column_name => $column_display_name ) {
 <?php endwhile;
 	}
 
+	/**
+	 * @param WP_Post $post
+	 * @param string  $att_title
+	 */
 	private function _get_row_actions( $post, $att_title ) {
 		$actions = array();
 

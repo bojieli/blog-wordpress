@@ -9,6 +9,9 @@
 /** WordPress Administration Bootstrap */
 require_once( dirname( __FILE__ ) . '/admin.php' );
 
+/** WordPress Translation Install API */
+require_once( ABSPATH . 'wp-admin/includes/translation-install.php' );
+
 if ( ! current_user_can( 'manage_options' ) )
 	wp_die( __( 'You do not have sufficient permissions to manage options for this site.' ) );
 
@@ -27,6 +30,20 @@ function options_general_add_js() {
 <script type="text/javascript">
 //<![CDATA[
 	jQuery(document).ready(function($){
+		var $siteName = $( '#wp-admin-bar-site-name' ).children( 'a' ).first(),
+			homeURL = ( <?php echo wp_json_encode( get_home_url() ); ?> || '' ).replace( /^(https?:\/\/)?(www\.)?/, '' );
+
+		$( '#blogname' ).on( 'input', function() {
+			var title = $.trim( $( this ).val() ) || homeURL;
+
+			// Truncate to 40 characters.
+			if ( 40 < title.length ) {
+				title = title.substring( 0, 40 ) + '\u2026';
+			}
+
+			$siteName.text( title );
+		});
+
 		$("input[name='date_format']").click(function(){
 			if ( "date_format_custom_radio" != $(this).attr("id") )
 				$("input[name='date_format_custom']").val( $(this).val() ).siblings('.example').text( $(this).siblings('span').text() );
@@ -49,6 +66,15 @@ function options_general_add_js() {
 					action: 'date_format_custom' == format.attr('name') ? 'date_format' : 'time_format',
 					date : format.val()
 				}, function(d) { format.siblings('.spinner').hide(); format.siblings('.example').text(d); } );
+		});
+
+		var languageSelect = $( '#WPLANG' );
+		$( 'form' ).submit( function() {
+			// Don't show a spinner for English and installed languages,
+			// as there is nothing to download.
+			if ( ! languageSelect.find( 'option:selected' ).data( 'installed' ) ) {
+				$( '#submit', this ).after( '<span class="spinner language-install-spinner" />' );
+			}
 		});
 	});
 //]]>
