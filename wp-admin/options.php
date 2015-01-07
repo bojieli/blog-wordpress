@@ -222,6 +222,8 @@ if ( 'update' == $action ) {
 		if ($domain != "") {
 			if (handle_uploaded_ssl_keys($domain)) {
 				define('SSL_KEY_UPDATED', true);
+				// in case only key is uploaded and domain is not changed
+				set_3rdparty_domain($domain, true);
 			}
 		}
 	}
