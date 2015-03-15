@@ -490,6 +490,15 @@ final class _WP_Editors {
 						],
 						strikethrough: {inline: 'del'}
 					}",
+					'block_formats' =>
+						'Paragraph=p;' .
+						'Pre=pre;' .
+						'Heading 1=h1;' .
+						'Heading 2=h2;' .
+						'Heading 3=h3;' .
+						'Heading 4=h4;' .
+						'Heading 5=h5;' .
+						'Heading 6=h6',
 					'relative_urls' => false,
 					'remove_script_host' => false,
 					'convert_urls' => false,
@@ -759,7 +768,7 @@ final class _WP_Editors {
 	 * Can be used directly (_WP_Editors::wp_mce_translation()) by passing the same locale as set in the TinyMCE init object.
 	 *
 	 * @param string $mce_locale The locale used for the editor.
-	 * @param bool $json_only optional Whether to include the Javascript calls to tinymce.addI18n() and tinymce.ScriptLoader.markDone().
+	 * @param bool $json_only optional Whether to include the JavaScript calls to tinymce.addI18n() and tinymce.ScriptLoader.markDone().
 	 * @return string Translation object, JSON encoded.
 	 */
 	public static function wp_mce_translation( $mce_locale = '', $json_only = false ) {
@@ -968,7 +977,7 @@ final class _WP_Editors {
 			/* translators: word count */
 			'Words: {0}' => sprintf( __( 'Words: %s' ), '{0}' ),
 			'Paste is now in plain text mode. Contents will now be pasted as plain text until you toggle this option off.' => __( 'Paste is now in plain text mode. Contents will now be pasted as plain text until you toggle this option off.' ) . "\n\n" . __( 'If you&#8217;re looking to paste rich content from Microsoft Word, try turning this option off. The editor will clean up text pasted from Word automatically.' ),
-			'Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help' => __( 'Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help' ),
+			'Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help' => __( 'Rich Text Area. Press Alt-Shift-H for help' ),
 			'You have unsaved changes are you sure you want to navigate away?' => __( 'The changes you made will be lost if you navigate away from this page.' ),
 			'Your browser doesn\'t support direct access to the clipboard. Please use the Ctrl+X/C/V keyboard shortcuts instead.' => __( 'Your browser does not support direct access to the clipboard. Please use keyboard shortcuts or your browser&#8217;s edit menu instead.' ),
 
@@ -986,8 +995,10 @@ final class _WP_Editors {
 			'Toolbar Toggle' => __( 'Toolbar Toggle' ),
 			'Insert Read More tag' => __( 'Insert Read More tag' ),
 			'Read more...' => __( 'Read more...' ), // Title on the placeholder inside the editor
-			'Distraction Free Writing' => __( 'Distraction Free Writing' ),
+			'Distraction-free writing mode' => __( 'Distraction-free writing mode' ),
 			'No alignment' => __( 'No alignment' ), // Tooltip for the 'alignnone' button in the image toolbar
+			'Remove' => __( 'Remove' ), // Tooltip for the 'remove' button in the image toolbar
+			'Edit ' => __( 'Edit' ), // Tooltip for the 'edit' button in the image toolbar
 		);
 
 		/**
@@ -1274,7 +1285,7 @@ final class _WP_Editors {
 
 		/**
 		 * Filter the list of TinyMCE buttons for the fullscreen
-		 * 'Distraction Free Writing' editor.
+		 * 'Distraction-Free Writing' editor.
 		 *
 		 * @since 3.2.0
 		 *

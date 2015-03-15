@@ -305,8 +305,17 @@ class WP_Date_Query {
 
 		// Days per year.
 		if ( array_key_exists( 'year', $date_query ) ) {
-			// If a year exists in the date query, we can use it to get the days.
-			$max_days_of_year = date( 'z', mktime( 0, 0, 0, 12, 31, $date_query['year'] ) ) + 1;
+			/*
+			 * If a year exists in the date query, we can use it to get the days.
+			 * If multiple years are provided (as in a BETWEEN), use the first one.
+			 */
+			if ( is_array( $date_query['year'] ) ) {
+				$_year = reset( $date_query['year'] );
+			} else {
+				$_year = $date_query['year'];
+			}
+
+			$max_days_of_year = date( 'z', mktime( 0, 0, 0, 12, 31, $_year ) ) + 1;
 		} else {
 			// otherwise we use the max of 366 (leap-year)
 			$max_days_of_year = 366;
@@ -336,10 +345,10 @@ class WP_Date_Query {
 		);
 
 		// Weeks per year.
-		if ( array_key_exists( 'year', $date_query ) ) {
+		if ( isset( $_year ) ) {
 			// If we have a specific year, use it to calculate number of weeks.
 			$date = new DateTime();
-			$date->setISODate( $date_query['year'], 53 );
+			$date->setISODate( $_year, 53 );
 			$week_count = $date->format( "W" ) === "53" ? 53 : 52;
 
 		} else {
@@ -360,7 +369,7 @@ class WP_Date_Query {
 
 		// Hours per day.
 		$min_max_checks['hour'] = array(
-			'min' => 1,
+			'min' => 0,
 			'max' => 23
 		);
 
@@ -382,22 +391,25 @@ class WP_Date_Query {
 				continue;
 			}
 
-			$is_between = $date_query[ $key ] >= $check['min'] && $date_query[ $key ] <= $check['max'];
+			// Throw a notice for each failing value.
+			$is_between = true;
+			foreach ( (array) $date_query[ $key ] as $_value ) {
+				$is_between = $_value >= $check['min'] && $_value <= $check['max'];
 
-			if ( ! $is_between ) {
+				if ( ! is_numeric( $_value ) || ! $is_between ) {
+					$error = sprintf(
+						/* translators: Date query invalid date message: 1: invalid value, 2: type of value, 3: minimum valid value, 4: maximum valid value */
+						__( 'Invalid value %1$s for %2$s. Expected value should be between %3$s and %4$s.' ),
+						'<code>' . esc_html( $_value ) . '</code>',
+						'<code>' . esc_html( $key ) . '</code>',
+						'<code>' . esc_html( $check['min'] ) . '</code>',
+						'<code>' . esc_html( $check['max'] ) . '</code>'
+					);
 
-				$error = sprintf(
-					/* translators: Date query invalid date message: 1: invalid value, 2: type of value, 3: minimum valid value, 4: maximum valid value */
-					__( 'Invalid value %1$s for %2$s. Expected value should be between %3$s and %4$s.' ),
-					'<code>' . esc_html( $date_query[ $key ] ) . '</code>',
-					'<code>' . esc_html( $key ) . '</code>',
-					'<code>' . esc_html( $check['min'] ) . '</code>',
-					'<code>' . esc_html( $check['max'] ) . '</code>'
-				);
+					_doing_it_wrong( __CLASS__, $error, '4.1.0' );
 
-				_doing_it_wrong( __CLASS__, $error, '4.1.0' );
-
-				$valid = false;
+					$valid = false;
+				}
 			}
 		}
 
@@ -414,7 +426,7 @@ class WP_Date_Query {
 
 		if ( $day_exists && $month_exists && $year_exists ) {
 			// 1. Checking day, month, year combination.
-			if ( ! checkdate( $date_query['month'], $date_query['day'], $date_query['year'] ) ) {
+			if ( ! wp_checkdate( $date_query['month'], $date_query['day'], $date_query['year'], sprintf( '%s-%s-%s', $date_query['year'], $date_query['month'], $date_query['day'] ) ) ) {
 				/* translators: 1: year, 2: month, 3: day of month */
 				$day_month_year_error_msg = sprintf(
 					__( 'The following values do not describe a valid date: year %1$s, month %2$s, day %3$s.' ),
@@ -431,12 +443,12 @@ class WP_Date_Query {
 			 * 2. checking day, month combination
 			 * We use 2012 because, as a leap year, it's the most permissive.
 			 */
-			if ( ! checkdate( $date_query['month'], $date_query['day'], 2012 ) ) {
+			if ( ! wp_checkdate( $date_query['month'], $date_query['day'], 2012, sprintf( '2012-%s-%s', $date_query['month'], $date_query['day'] ) ) ) {
 				/* translators: 1: month, 2: day of month */
 				$day_month_year_error_msg = sprintf(
-					__( 'The following values do not describe a valid date: month <code>%1$d</code>, day <code>%2$d</code>.' ),
-					esc_html( $date_query['month'] ),
-					esc_html( $date_query['day'] )
+					__( 'The following values do not describe a valid date: month %1$s, day %2$s.' ),
+					'<code>' . esc_html( $date_query['month'] ) . '</code>',
+					'<code>' . esc_html( $date_query['day'] ) . '</code>'
 				);
 
 				$valid = false;
