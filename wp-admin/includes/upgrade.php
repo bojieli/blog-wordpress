@@ -89,7 +89,11 @@ function wp_install( $blog_title, $user_name, $user_email, $public, $deprecated 
 
 	flush_rewrite_rules();
 
+    /*
+     * USTC blog remove: do not send plaintext password via email!
+     *
 	wp_new_blog_notification($blog_title, $guessurl, $user_id, ($email_password ? $user_password : __('The password you chose during the install.') ) );
+     */
 
 	wp_cache_flush();
 
