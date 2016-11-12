@@ -20,7 +20,8 @@
 
 /** Define ABSPATH as this file's directory */
 //define( 'ABSPATH', dirname(__FILE__) . '/' );
-define('ABSPATH', app_root_path());
+if (!defined('ABSPATH'))
+    define('ABSPATH', app_root_path());
 
 // ustc-blog: no FTP or SSH access is provided.
 // If a file is not writable, fail fast.
